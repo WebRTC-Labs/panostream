@@ -138,17 +138,32 @@ function resetAllVideo() {
 }
 
 function getPixels() {
-  var video = $('view1');
-  var canvas = $('tmpcanvas');
-  var context = canvas.getContext('2d');
-  context.drawImage(video, 0, 0, video.width, video.height);
-  var pixels = context.getImageData(0, 0, video.width, video.height);
-  for (var x = 0; x < video.width; ++x) {
-    for (var y = 0; y < video.height; ++y) {
-      pixels.data[(video.width * y + x) * 4] = 0;
+  var pixelsize = 4;
+  var video1 = $('view1');
+  var video2 = $('view2');
+  var tmpcanvas1 = $('tmpcanvas1');
+  var tmpcanvas2 = $('tmpcanvas2');
+  var displaycanvas = $('displaycanvas');
+  var context1 = tmpcanvas1.getContext('2d');
+  var context2 = tmpcanvas2.getContext('2d');
+  var displaycontext = displaycanvas.getContext('2d');
+  context1.drawImage(video1, 0, 0, tmpcanvas1.width, tmpcanvas1.height);
+  context2.drawImage(video2, 0, 0, tmpcanvas2.width, tmpcanvas2.height);
+  var pixels1 = context1.getImageData(0, 0, tmpcanvas1.width, tmpcanvas1.height);
+  var pixels2 = context2.getImageData(0, 0, tmpcanvas2.width, tmpcanvas2.height);
+  var displaypixels = displaycontext.getImageData(0, 0, displaycanvas.width, displaycanvas.height);
+  for (var x = 0; x < displaycanvas.width; ++x) {
+    for (var y = 0; y < displaycanvas.height; ++y) {
+      for (var c = 0; c < pixelsize; ++c) {
+        if (x < tmpcanvas1.width) {
+          displaypixels.data[(displaycanvas.width * y + x) * pixelsize + c] = pixels1.data[(tmpcanvas1.width * y + x) * pixelsize + c];
+        } else {
+          displaypixels.data[(displaycanvas.width * y + x) * pixelsize + c] = pixels2.data[(tmpcanvas2.width * y + x - tmpcanvas1.width) * pixelsize + c];
+        }
+      }
     }
   }
-  context.putImageData(pixels, 0, 0);
+  displaycontext.putImageData(displaypixels, 0, 0);
 }
 
 function debug(txt) {
