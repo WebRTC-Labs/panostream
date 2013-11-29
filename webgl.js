@@ -202,7 +202,7 @@ function updateTexture() {
 function drawScene() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  CameraOverlapInPercentage = document.getElementById('overlap').value;
+  CameraOverlapInPercentage = document.getElementById('overlapSlider').value;
 
   // 45 refers to a 45 degrees field of view.
   perspectiveMatrix = makePerspective(45, 640 / 240, 0.1, 100.0);

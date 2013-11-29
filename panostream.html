@@ -25,7 +25,7 @@
   window.onload = function() {
     getDevices();
     startWebGL();
-    setInterval("getPixels()",2000);
+    setInterval("updateOverlap()",1000);
   };
   </script>
 
@@ -104,14 +104,11 @@
     <code>&lt;canvas&gt;</code> element.
   </canvas>
 
-  <input type="range" id="overlap" min="0" max="100" value="50">
+  <input type="range" id="overlapSlider" min="0" max="100" value="50">
 
-  <canvas id="displaycanvas" width="640" height="240" visible="none">
-    Your browser doesn't appear to support the HTML5
-    <code>&lt;canvas&gt;</code> element.
-  </canvas>
   <canvas id="tmpcanvas1" width="320" height="240" style="display:none"></canvas>
   <canvas id="tmpcanvas2" width="320" height="240" style="display:none"></canvas>
+  <p id="overlap"></p>
 </div>
 </body>
 </html>
