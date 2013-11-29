@@ -153,7 +153,8 @@ function updateOverlap() {
     var pixels1 = context1.getImageData(0, 0, tmpcanvas1.width, tmpcanvas1.height);
     var pixels2 = context2.getImageData(0, 0, tmpcanvas2.width, tmpcanvas2.height);
     overlap = estimateOverlap(pixels1, pixels2);
-    document.getElementById('overlapSlider').value = overlap / tmpcanvas1.width;
+    document.getElementById('overlapSlider').value = 100 * overlap / tmpcanvas1.width;
+    console.log ("Estimated overlap " + 100 * overlap / tmpcanvas1.width + "%");
     var overlaptext = $('overlap');
     overlaptext.innerHTML = CameraOverlapInPercentage;
   }
