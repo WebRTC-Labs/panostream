@@ -169,7 +169,7 @@ function initTextures() {
 function updateTexture() {
   gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA0
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
         gl.UNSIGNED_BYTE, videoElement);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
@@ -206,7 +206,7 @@ function drawScene() {
   gl.bindTexture(gl.TEXTURE_2D, null);
 
 
-  mvTranslate([- ((100-CameraOverlapInPercentage)/50.0), 0.0, 0.0]);
+  mvTranslate([-((100-CameraOverlapInPercentage)/50.0), 0.0, 0.0]);
 
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, cameraTexture2);
