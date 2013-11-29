@@ -141,21 +141,22 @@ var pixelsize = 4;
 var overlap = 0;
 
 function updateOverlap() {
-  var video1 = $('view1');
-  var video2 = $('view2');
-  var tmpcanvas1 = $('tmpcanvas1');
-  var tmpcanvas2 = $('tmpcanvas2');
-  var context1 = tmpcanvas1.getContext('2d');
-  var context2 = tmpcanvas2.getContext('2d');
-  context1.drawImage(video1, 0, 0, tmpcanvas1.width, tmpcanvas1.height);
-  context2.drawImage(video2, 0, 0, tmpcanvas2.width, tmpcanvas2.height);
-  var pixels1 = context1.getImageData(0, 0, tmpcanvas1.width, tmpcanvas1.height);
-  var pixels2 = context2.getImageData(0, 0, tmpcanvas2.width, tmpcanvas2.height);
   if (overlap == 0) {
+    var video1 = $('view1');
+    var video2 = $('view2');
+    var tmpcanvas1 = $('tmpcanvas1');
+    var tmpcanvas2 = $('tmpcanvas2');
+    var context1 = tmpcanvas1.getContext('2d');
+    var context2 = tmpcanvas2.getContext('2d');
+    context1.drawImage(video1, 0, 0, tmpcanvas1.width, tmpcanvas1.height);
+    context2.drawImage(video2, 0, 0, tmpcanvas2.width, tmpcanvas2.height);
+    var pixels1 = context1.getImageData(0, 0, tmpcanvas1.width, tmpcanvas1.height);
+    var pixels2 = context2.getImageData(0, 0, tmpcanvas2.width, tmpcanvas2.height);
     overlap = estimateOverlap(pixels1, pixels2);
+    CameraOverlapInPercentage = overlap / tmpcanvas1.width;
+    var overlaptext = $('overlap');
+    overlaptext.innerHTML = CameraOverlapInPercentage;
   }
-  var overlaptext = $('overlap');
-  overlaptext.innerHTML = overlap;
 }
 
 function estimateOverlap(pixels1, pixels2) {
