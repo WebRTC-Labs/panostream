@@ -4,6 +4,9 @@
 
 var gl; // A global variable for the WebGL context
 
+var videoElement;
+var cameraTexture;
+
 function startWebGL() {
   var canvas = document.getElementById("glcanvas");
 
@@ -18,10 +21,22 @@ function startWebGL() {
   }
 
   initBuffers();
+
   initShaders();
 
-  drawScene();
+  videoElement = document.getElementById("view1");
+  videoElement.addEventListener("canplaythrough", startVideo, true);
+
+  canvas = document.getElementById("glcanvas");
+  gl.viewport(0, 0, canvas.width, canvas.height);
+
   return 1;
+}
+
+function startVideo() {
+  console.log("starting video playback");
+  initTextures();
+  intervalID = setInterval(drawScene, 100);
 }
 
 function initWebGL(canvas) {
@@ -48,15 +63,45 @@ var horizAspect = 240.0/640.0;
 function initBuffers() {
   squareVerticesBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
-
   var vertices = [
-    1.0,  1.0,  0.0,
-    -1.0, 1.0,  0.0,
-    1.0,  -1.0, 0.0,
-    -1.0, -1.0, 0.0
+    -1.0, -1.0, 2.0,
+    1.0,  -1.0, 2.0,
+    1.0,  1.0,  2.0,
+    -1.0, 1.0,  2.0
   ];
-
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
+
+  //squareVerticesNormalBuffer = gl.createBuffer();
+  //gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesNormalBuffer);
+  //var normals = [
+  //  0.0,  0.0,  1.0,
+  //  0.0,  0.0,  1.0,
+  //  0.0,  0.0,  1.0,
+  //  0.0,  0.0,  1.0
+  //];
+  //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+
+  squareVerticesTextureCoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesTextureCoordBuffer);
+  var textureCoordinates = [
+    0.0,  0.0,
+    1.0,  0.0,
+    1.0,  1.0,
+    0.0,  1.0,
+  ];
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates),
+      gl.STATIC_DRAW);
+
+  squareVerticesIndexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareVerticesIndexBuffer);
+  var squareVertexIndices = [
+    0,  2,  3,
+    0,  1,  2,
+  ]
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
+      new Uint16Array(squareVertexIndices), gl.STATIC_DRAW);
+
   console.log("WebGL buffers initialised.");
 }
 
@@ -78,10 +123,71 @@ function initShaders() {
   gl.useProgram(shaderProgram);
   console.log("WebGL shaders and program initialised.");
 
+  //vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
+  //gl.enableVertexAttribArray(vertexNormalAttribute);
+
   vertexPositionAttribute =
       gl.getAttribLocation(shaderProgram, "aVertexPosition");
   gl.enableVertexAttribArray(vertexPositionAttribute);
+
+  textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
+  gl.enableVertexAttribArray(textureCoordAttribute);
 }
+
+//function initTextures() {
+//  cameraTexture = createTextureFromImage(videoElement);
+//  console.log("WebGL textures initialised");
+//}
+
+function initTextures() {
+  cameraTexture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  updateTexture();
+}
+function updateTexture() {
+  gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+        gl.UNSIGNED_BYTE, videoElement);
+}
+
+function drawScene() {
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  // 45 refers to a 45 degrees field of view.
+  perspectiveMatrix = makePerspective(45, 640 / 480, 0.1, 100.0);
+
+  loadIdentity();
+  mvTranslate([0.0, 0.0, -6.0]);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
+  gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+
+  // Bind the normals buffer to the shader attribute.
+  //gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesNormalBuffer);
+  //gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+
+  // Set the texture coordinates attribute for the vertices.
+  gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesTextureCoordBuffer);
+  gl.vertexAttribPointer(textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
+
+  // Specify the texture to map onto the faces.
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+        gl.UNSIGNED_BYTE, videoElement);
+  gl.uniform1i(gl.getUniformLocation(shaderProgram, "uSampler"), 0);
+
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareVerticesIndexBuffer);
+
+  setMatrixUniforms();
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
 
 function getShader(gl, id) {
   var shaderScript, theSource, currentChild, shader;
@@ -124,22 +230,7 @@ function getShader(gl, id) {
       return null;
   }
 
-
   return shader;
-}
-
-function drawScene() {
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-  perspectiveMatrix = makePerspective(45, 640.0/240.0, 0.1, 100.0);
-
-  loadIdentity();
-  mvTranslate([-0.0, 0.0, -6.0]);
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
-  gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
-  setMatrixUniforms();
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,4 +254,39 @@ function setMatrixUniforms() {
 
   var mvUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
   gl.uniformMatrix4fv(mvUniform, false, new Float32Array(mvMatrix.flatten()));
+}
+
+// EXPERIMENTAL
+
+// Functions coming from
+// http://www.khronos.org/webgl/wiki/WebGL_and_OpenGL_Differences#Non-Power_of_Two_Texture_Support
+
+function createTextureFromImage(image) {
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    if (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height)) {
+        // Scale up the texture to the next highest power of two dimensions.
+        var canvas = document.createElement("canvas");
+        canvas.width = nextHighestPowerOfTwo(image.width);
+        canvas.height = nextHighestPowerOfTwo(image.height);
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(image, 0, 0, image.width, image.height);
+        image = canvas;
+    }
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    return texture;
+}
+
+function isPowerOfTwo(x) {
+    return (x & (x - 1)) == 0;
+}
+
+function nextHighestPowerOfTwo(x) {
+    --x;
+    for (var i = 1; i < 32; i <<= 1) {
+        x = x | x >> i;
+    }
+    return x + 1;
 }
