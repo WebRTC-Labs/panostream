@@ -13,83 +13,15 @@
   <title>Multi-device panorama video</title>
   <link rel="StyleSheet" href="stylesheet.css">
   <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
-   <!-- Load the polyfill to switch-hit between Chrome and Firefox -->
+  <!-- Load the polyfill to switch-hit between Chrome and Firefox -->
   <script src="adapter.js"></script>
 
   <script src="sylvester.js" type="text/javascript"></script>
   <script src="glUtils.js" type="text/javascript"></script>
   <script src="webgl.js" type="text/javascript"></script>
+
+  <script src="panostream.js"></script>
   <script type="text/javascript">
-  $ = function(id) {
-    return document.getElementById(id);
-  };
-
-  var gVideoCounter = 1;
-
-  function requestVideo() {
-    // Call into getUserMedia via the polyfill (adapter.js).
-    var devices = getSourcesFromField($('videosrc'));
-    var constraints = {
-        audio: false,
-        video: {
-            optional: {
-                maxWidth: 1280,
-                maxHeight: 720,
-            },
-        },
-    }
-    constraints.video = {optional: [{sourceId: devices.video_id}]};
-
-    getUserMedia(
-        constraints,
-        function(stream) { getUserMediaOkCallback(stream, devices.video_id); },
-        getUserMediaFailedCallback
-    );
-  }
-
-  function getSourcesFromField(video_select) {
-    var source = {
-      video_id: null
-    };
-    if (video_select.options.length > 0) {
-      source.video_id = video_select.options[video_select.selectedIndex].value;
-    }
-    return source;
-  }
-
-  function getUserMediaFailedCallback(error) {
-    alert("User media request denied with error code " + error.code);
-  }
-
-  function getUserMediaOkCallback(stream, video_id) {
-     // Call the polyfill wrapper to attach the media stream to this element.
-     var videoTagId = 'view' + gVideoCounter++;
-     attachMediaStream($(videoTagId), stream);
-     $(videoTagId + '-label').innerHTML = 'Video ID: ...' +
-         video_id.substring(40)
-  }
-
-  function getDevices() {
-    var video_select = $('videosrc');
-    MediaStreamTrack.getSources(function(devices) {
-      for (var i = 0; i < devices.length; i++) {
-        var option = document.createElement('option');
-        option.value = devices[i].id;
-        option.text = devices[i].label;
-        if (devices[i].kind == 'video') {
-          if (option.text == '') {
-            option.text = 'Video: ' + devices[i].id;
-          }
-          video_select.appendChild(option);
-        }
-      }
-    });
-  }
-
-  function debug(txt) {
-    console.log(txt);
-  }
-
   window.onload = function() {
     getDevices();
     startWebGL();
@@ -125,16 +57,31 @@
       <video width="320" height="240" id="view1" autoplay="autoplay"
           class="video-area"></video>
       <div id="view1-label"></div>
+      <div>
+        Size: <div id="view1-size" class="inline-contents"></div>
+        <div id="view1-stream-size" class="inline-contents">(stream size
+            :N/A)</div><br/>
+      </div>
     </div>
     <div id="left">
       <video width="320" height="240" id="view2" autoplay="autoplay"
           class="video-area"></video>
       <div id="view2-label"></div>
+      <div>
+        Size: <div id="view2-size" class="inline-contents"></div>
+        <div id="view2-stream-size" class="inline-contents">(stream size
+            :N/A)</div><br/>
+      </div>
     </div>
     <div id="left">
       <video width="320" height="240" id="view3" autoplay="autoplay"
           class="video-area"></video>
       <div id="view3-label"></div>
+      <div>
+        Size: <div id="view3-size" class="inline-contents"></div>
+        <div id="view3-stream-size" class="inline-contents">(stream size
+            :N/A)</div><br/>
+      </div>
     </div>
   </div>
 
