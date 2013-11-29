@@ -50,6 +50,8 @@
   <div>
     Current webcam: <select id="videosrc"></select>
     <button id="request-video" onclick="requestVideo();">Request video</button>
+    <button id="reset-video" onclick="resetAllVideo();">Reset all devices
+        </button>
   </div>
   <div>Panorama:</div>
   <div id="container">
@@ -85,10 +87,10 @@
     </div>
   </div>
 
-   <canvas id="glcanvas" width="640" height="240">
-    Your browser doesn't appear to support the HTML5 <code>&lt;canvas&gt;</code> element.
+  <canvas id="glcanvas" width="640" height="240">
+      Your browser doesn't appear to support the HTML5
+      <code>&lt;canvas&gt;</code> element.
   </canvas>
-
 
 </div>
 </body>
