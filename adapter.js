@@ -23,7 +23,7 @@ if (navigator.mozGetUserMedia) {
 
   // The RTCPeerConnection object.
   RTCPeerConnection = webkitRTCPeerConnection;
-  
+
   // Get UserMedia (only difference is the prefix).
   // Code from Adam Barth.
   getUserMedia = navigator.webkitGetUserMedia.bind(navigator);
@@ -38,14 +38,15 @@ if (navigator.mozGetUserMedia) {
   if (!webkitMediaStream.prototype.getVideoTracks) {
       webkitMediaStream.prototype.getVideoTracks = function() {
       return this.videoTracks;
-    } 
-  } 
-  
+    }
+  }
+
   if (!webkitMediaStream.prototype.getAudioTracks) {
       webkitMediaStream.prototype.getAudioTracks = function() {
       return this.audioTracks;
     }
-  } 
+  }
 } else {
   console.log("Browser does not appear to be WebRTC-capable");
 }
+
