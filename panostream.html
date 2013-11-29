@@ -25,7 +25,6 @@
   window.onload = function() {
     getDevices();
     startWebGL();
-    setInterval("updateOverlap()",1000);
   };
   </script>
 
@@ -99,7 +98,7 @@
     </div>
   </div>
 
-  <canvas id="glcanvas" width="640" height="240">
+  <canvas id="glcanvas" width="960" height="240">
     Your browser doesn't appear to support the HTML5
     <code>&lt;canvas&gt;</code> element.
   </canvas>
@@ -108,7 +107,7 @@
 
   <canvas id="tmpcanvas1" width="320" height="240" style="display:none"></canvas>
   <canvas id="tmpcanvas2" width="320" height="240" style="display:none"></canvas>
-  <p id="overlap"></p>
+  <p id="overlap" onclick="updateOverlap()">update overlap</p>
 </div>
 </body>
 </html>

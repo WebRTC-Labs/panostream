@@ -205,10 +205,10 @@ function drawScene() {
   CameraOverlapInPercentage = document.getElementById('overlapSlider').value;
 
   // 45 refers to a 45 degrees field of view.
-  perspectiveMatrix = makePerspective(45, 640 / 240, 0.1, 100.0);
+  perspectiveMatrix = makePerspective(45, 960 / 240, 0.1, 100.0);
 
   loadIdentity();
-  mvTranslate([-1.8, 0.0, -6.0]);
+  mvTranslate([-2.5, 0.0, -6.0]);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
   gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
@@ -227,7 +227,7 @@ function drawScene() {
   gl.bindTexture(gl.TEXTURE_2D, null);
 
 
-  mvTranslate([((100-CameraOverlapInPercentage)/50.0), 0.0, 0.0]);
+  mvTranslate([(2.5*(100-CameraOverlapInPercentage)/100.0), 0.0, 0.0]);
 
   gl.activeTexture(gl.TEXTURE1);
   gl.bindTexture(gl.TEXTURE_2D, cameraTexture2);
@@ -240,7 +240,7 @@ function drawScene() {
   gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
-  mvTranslate([((100-CameraOverlapInPercentage)/50.0), 0.0, 0.0]);
+  mvTranslate([(2.5*(100-CameraOverlapInPercentage)/100.0), 0.0, 0.0]);
 
   gl.activeTexture(gl.TEXTURE2);
   gl.bindTexture(gl.TEXTURE_2D, cameraTexture3);
