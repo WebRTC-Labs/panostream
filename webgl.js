@@ -9,6 +9,8 @@ var cameraTexture;
 var videoElement2;
 var cameraTexture2;
 
+var CameraOverlapInPercentage;
+
 function startWebGL() {
   var canvas = document.getElementById("glcanvas");
 
@@ -35,6 +37,7 @@ function startWebGL() {
   canvas = document.getElementById("glcanvas");
   gl.viewport(0, 0, canvas.width, canvas.height);
 
+  CameraOverlapInPercentage = 50;
   return 1;
 }
 
@@ -166,7 +169,7 @@ function initTextures() {
 function updateTexture() {
   gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA0
         gl.UNSIGNED_BYTE, videoElement);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
@@ -181,7 +184,7 @@ function drawScene() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   // 45 refers to a 45 degrees field of view.
-  perspectiveMatrix = makePerspective(45, 640 / 480, 0.1, 100.0);
+  perspectiveMatrix = makePerspective(45, 640 / 240, 0.1, 100.0);
 
   loadIdentity();
   mvTranslate([0.0, 0.0, -6.0]);
@@ -203,12 +206,12 @@ function drawScene() {
   gl.bindTexture(gl.TEXTURE_2D, null);
 
 
-  mvTranslate([-1.0, 0.0, 0.0]);
+  mvTranslate([- ((100-CameraOverlapInPercentage)/50.0), 0.0, 0.0]);
 
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, cameraTexture2);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
-        gl.UNSIGNED_BYTE, videoElement);
+        gl.UNSIGNED_BYTE, videoElement2);
   gl.uniform1i(gl.getUniformLocation(shaderProgram, "uSampler"), 0);
 
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareVerticesIndexBuffer);
