@@ -16,10 +16,11 @@ function requestVideo() {
               maxWidth: 320,
               maxHeight: 240,
           },
+          optional: [
+             {sourceId: devices.video_id},
+          ],
       },
   };
-  constraints.video = {optional: [{sourceId: devices.video_id}]};
-
   getUserMedia(
       constraints,
       function(stream) { getUserMediaOkCallback(stream, devices.video_id); },
