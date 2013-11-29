@@ -137,6 +137,20 @@ function resetAllVideo() {
   }
 }
 
+function getPixels() {
+  var video = $('view1');
+  var canvas = $('tmpcanvas');
+  var context = canvas.getContext('2d');
+  context.drawImage(video, 0, 0, video.width, video.height);
+  var pixels = context.getImageData(0, 0, video.width, video.height);
+  for (var x = 0; x < video.width; ++x) {
+    for (var y = 0; y < video.height; ++y) {
+      pixels.data[(video.width * y + x) * 4] = 0;
+    }
+  }
+  context.putImageData(pixels, 0, 0);
+}
+
 function debug(txt) {
   console.log(txt);
 }

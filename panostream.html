@@ -25,6 +25,7 @@
   window.onload = function() {
     getDevices();
     startWebGL();
+    setInterval("getPixels()",20);
   };
   </script>
   <script id="shader-fs" type="x-shader/x-fragment">
@@ -88,10 +89,14 @@
   </div>
 
   <canvas id="glcanvas" width="640" height="240">
-      Your browser doesn't appear to support the HTML5
-      <code>&lt;canvas&gt;</code> element.
+    Your browser doesn't appear to support the HTML5
+    <code>&lt;canvas&gt;</code> element.
   </canvas>
 
+  <canvas id="tmpcanvas" width="320" height="240">
+    Your browser doesn't appear to support the HTML5
+    <code>&lt;canvas&gt;</code> element.
+  </canvas>
 </div>
 </body>
 </html>
