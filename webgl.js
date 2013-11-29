@@ -6,6 +6,8 @@ var gl; // A global variable for the WebGL context
 
 var videoElement;
 var cameraTexture;
+var videoElement2;
+var cameraTexture2;
 
 function startWebGL() {
   var canvas = document.getElementById("glcanvas");
@@ -27,6 +29,9 @@ function startWebGL() {
   videoElement = document.getElementById("view1");
   videoElement.addEventListener("canplaythrough", startVideo, true);
 
+  videoElement2 = document.getElementById("view2");
+  videoElement2.addEventListener("canplaythrough", startVideo, true);
+
   canvas = document.getElementById("glcanvas");
   gl.viewport(0, 0, canvas.width, canvas.height);
 
@@ -36,7 +41,7 @@ function startWebGL() {
 function startVideo() {
   console.log("starting video playback");
   initTextures();
-  intervalID = setInterval(drawScene, 100);
+  intervalID = setInterval(drawScene, 50);
 }
 
 function initWebGL(canvas) {
@@ -64,10 +69,10 @@ function initBuffers() {
   squareVerticesBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
   var vertices = [
-    -1.0, -1.0, 2.0,
-    1.0,  -1.0, 2.0,
-    1.0,  1.0,  2.0,
-    -1.0, 1.0,  2.0
+    -1.0, -1.0,  2.0,
+     1.0, -1.0,  2.0,
+     1.0,  1.0,  2.0,
+    -1.0,  1.0,  2.0
   ];
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
@@ -146,6 +151,16 @@ function initTextures() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+
+  cameraTexture2 = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, cameraTexture2);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+
   updateTexture();
 }
 function updateTexture() {
@@ -153,6 +168,13 @@ function updateTexture() {
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
         gl.UNSIGNED_BYTE, videoElement);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+
+  gl.bindTexture(gl.TEXTURE_2D, cameraTexture2);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+        gl.UNSIGNED_BYTE, videoElement2);
+  gl.bindTexture(gl.TEXTURE_2D, null);
 }
 
 function drawScene() {
@@ -166,16 +188,9 @@ function drawScene() {
 
   gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
   gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
-
-  // Bind the normals buffer to the shader attribute.
-  //gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesNormalBuffer);
-  //gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
-
-  // Set the texture coordinates attribute for the vertices.
   gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesTextureCoordBuffer);
   gl.vertexAttribPointer(textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
 
-  // Specify the texture to map onto the faces.
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
@@ -183,9 +198,25 @@ function drawScene() {
   gl.uniform1i(gl.getUniformLocation(shaderProgram, "uSampler"), 0);
 
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareVerticesIndexBuffer);
-
   setMatrixUniforms();
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+
+
+  mvTranslate([-1.0, 0.0, 0.0]);
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
+        gl.UNSIGNED_BYTE, videoElement);
+  gl.uniform1i(gl.getUniformLocation(shaderProgram, "uSampler"), 0);
+
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareVerticesIndexBuffer);
+  setMatrixUniforms();
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+
+
 }
 
 
