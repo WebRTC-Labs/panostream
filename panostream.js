@@ -137,33 +137,67 @@ function resetAllVideo() {
   }
 }
 
-function getPixels() {
-  var pixelsize = 4;
+var pixelsize = 4;
+var overlap = 0;
+
+function updateOverlap() {
   var video1 = $('view1');
   var video2 = $('view2');
   var tmpcanvas1 = $('tmpcanvas1');
   var tmpcanvas2 = $('tmpcanvas2');
-  var displaycanvas = $('displaycanvas');
   var context1 = tmpcanvas1.getContext('2d');
   var context2 = tmpcanvas2.getContext('2d');
-  var displaycontext = displaycanvas.getContext('2d');
   context1.drawImage(video1, 0, 0, tmpcanvas1.width, tmpcanvas1.height);
   context2.drawImage(video2, 0, 0, tmpcanvas2.width, tmpcanvas2.height);
   var pixels1 = context1.getImageData(0, 0, tmpcanvas1.width, tmpcanvas1.height);
   var pixels2 = context2.getImageData(0, 0, tmpcanvas2.width, tmpcanvas2.height);
-  var displaypixels = displaycontext.getImageData(0, 0, displaycanvas.width, displaycanvas.height);
-  for (var x = 0; x < displaycanvas.width; ++x) {
-    for (var y = 0; y < displaycanvas.height; ++y) {
-      for (var c = 0; c < pixelsize; ++c) {
-        if (x < tmpcanvas1.width) {
-          displaypixels.data[(displaycanvas.width * y + x) * pixelsize + c] = pixels1.data[(tmpcanvas1.width * y + x) * pixelsize + c];
-        } else {
-          displaypixels.data[(displaycanvas.width * y + x) * pixelsize + c] = pixels2.data[(tmpcanvas2.width * y + x - tmpcanvas1.width) * pixelsize + c];
-        }
+  if (overlap == 0) {
+    overlap = estimateOverlap(pixels1, pixels2);
+  }
+  var overlaptext = $('overlap');
+  overlaptext.innerHTML = overlap;
+}
+
+function estimateOverlap(pixels1, pixels2) {
+  var minOverlap = 1;
+  var initialized = false;
+  for (var y = 0; y < tmpcanvas1.height; ++y) {
+    for (var c = 0; c < pixelsize; ++c) {
+      if (pixels1.data[(tmpcanvas1.width * y + tmpcanvas1.width - 1) * pixelsize + c] != 0 && pixels2.data[(tmpcanvas2.width * y) * pixelsize + c] != 0) {
+        initialized = true;
       }
     }
   }
-  displaycontext.putImageData(displaypixels, 0, 0);
+  if (initialized) {
+    var minCorrelation = 0;
+    for (var y = 0; y < tmpcanvas1.height; y += 8) {
+      for (var c = 0; c < (pixelsize - 1); ++c) {
+        var tmp = pixels1.data[(tmpcanvas1.width * y + tmpcanvas1.width - 1) * pixelsize + c] - pixels2.data[(tmpcanvas2.width * y) * pixelsize + c];
+        tmp *= tmp;
+        minCorrelation += tmp;
+      }
+    }
+    for (var overlap = 2; overlap < tmpcanvas1.width; ++overlap) {
+      var correlation = 0;
+      for (var x = 0; x < overlap; ++x) {
+        for (var y = 0; y < tmpcanvas1.height; y += 8) {
+          for (var c = 0; c < (pixelsize - 1); ++c) {
+            var tmp = pixels1.data[(tmpcanvas1.width * y + tmpcanvas1.width - x - 1) * pixelsize + c] - pixels2.data[(tmpcanvas2.width * y + x) * pixelsize + c];
+            tmp *= tmp;
+            correlation += tmp;
+          }
+        }
+      }
+      correlation /= overlap;
+      if (correlation < minCorrelation) {
+        minCorrelation = correlation;
+        minOverlap = overlap;
+      }
+    }
+  } else {
+    minOverlap = 0;
+  }
+  return minOverlap
 }
 
 function debug(txt) {
