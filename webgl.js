@@ -1,18 +1,25 @@
-
+// webgl.js is used via startWebGL() to create a GL canvas inside a div of name
+// called "glcanvas". It will take the video feeds from up to three cameras
+// rendered on <video> tags of IDs |view1| to |view3|. Up to three non visible
+// canvases are needed named |canvas1| to |canvas3|, not displayed.
+// The code in this file has taken inspiration from:
 // Adapted from http://stemkoski.github.io/Three.js/#webcam-texture
-// MAIN
+
+// Amount of cameras to render in the 3D world.
+var NUM_CAMERAS = 3;
 
 // ThreeJS global variables.
 var container, scene, camera, renderer;
 
-// Video/canvas use global variables.
-var NUM_CAMERAS = 3;
+// Global variables to manipulate Videos/canvases.
 var video = [];
 var videoImage = [];
 var videoImageContext = [];
 var videoTexture = [];
 
-// Entry point of the webgl.js file. Call this and then
+var statprofiler = new profiler();
+
+// Entry point of the webgl.js file.
 function startWebGL() {
   init();
   animate();
@@ -95,6 +102,9 @@ function init()
   else
     camera.lookAt(movieScreen[0].position);
   console.log("Three.JS GL context and video feeds initialized.");
+
+  statprofiler.add("Render time");
+  console.log(statprofiler.log());
 }
 
 function animate() {
@@ -104,6 +114,9 @@ function animate() {
 }
 
 function render()  {
+  statprofiler.new_frame();
+  statprofiler.start("Render time");
+
   for (var i=0; i < NUM_CAMERAS; i++) {
     if (video[i].readyState === video[i].HAVE_ENOUGH_DATA) {
        videoImageContext[i].drawImage(
@@ -113,6 +126,9 @@ function render()  {
     }
   }
   renderer.render(scene, camera);
+
+  statprofiler.stop("Render time");
+  document.getElementById('log').innerHTML  = (statprofiler.log());
 }
 
 function update() {

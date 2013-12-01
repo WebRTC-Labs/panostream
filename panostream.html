@@ -13,19 +13,23 @@
   <title>Multi-device panorama video</title>
   <link rel="StyleSheet" href="stylesheet.css">
   <meta http-equiv="X-UA-Compatible" content="chrome=1"/>
-  <!-- Load the polyfill to switch-hit between Chrome and Firefox -->
+
+  <!-- Load the polyfill to switch-hit between Chrome and Firefox. -->
   <script src="adapter.js"></script>
 
-
-  <script src="libs/Three.js"></script>
+  <!-- Load the Three.js library and the code that creates drawing scene,
+  caneras and maps video feeds to 3D textures. Internally it uses the profiler
+  nanolibrary from http://inspirit.github.io/jsfeat for FPS collection etc. -->
+  <script src="libs/profiler.js" type="text/javascript" ></script>
+  <script src="libs/Three.js" type="text/javascript" ></script>
   <script src="webgl.js" type="text/javascript"></script>
 
   <script src="panostream.js"></script>
   <script type="text/javascript">
-  window.onload = function() {
-    getDevices();
-    startWebGL();
-  };
+    window.onload = function() {
+      getDevices();
+      startWebGL();
+    };
   </script>
 
 </head>
@@ -77,7 +81,9 @@
   <canvas id="canvas3" width="320" height="240" style="display:none"></canvas>
   <div id="glcanvas" width="960" height="240" ></div>
 
-  <input type="range" id="overlapSlider" min="0" max="100" value="50">
+  <div id="log">hi</div>
+
+
   <canvas id="tmpcanvas1" width="320" height="240" style="display:none"></canvas>
   <canvas id="tmpcanvas2" width="320" height="240" style="display:none"></canvas>
   <p id="overlap" onclick="updateOverlap()">update overlap</p>
