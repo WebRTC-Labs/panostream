@@ -17,7 +17,12 @@ var videoImage = [];
 var videoImageContext = [];
 var videoTexture = [];
 
+// Profiler variable;
 var statprofiler = new profiler();
+
+// Detected features, erroneously called corners.
+var corners = []; corners.length = 320*240;
+var img_u8;
 
 // Entry point of the webgl.js file.
 function startWebGL() {
@@ -58,7 +63,7 @@ function init()
   scene.add(light);
   console.log("Three.JS light source initialized");
 
-  // FLOOR
+  // Floor -> Disconnected but is useful when the camera is looking AWOL.
   //var floorTexture = new THREE.ImageUtils.loadTexture( 'images/checkerboard.jpg' );
   //floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
   //floorTexture.repeat.set( 10, 10 );
@@ -104,7 +109,20 @@ function init()
   console.log("Three.JS GL context and video feeds initialized.");
 
   statprofiler.add("Render time");
-  console.log(statprofiler.log());
+  statprofiler.add("FAST features");
+  console.log("Profiler initialized.");
+
+  // threshold on difference between intensity of the central pixel
+  // and pixels of a circle around this pixel
+  var threshold = 20;
+  jsfeat.fast_corners.set_threshold(threshold);
+
+  // you should use preallocated point2d_t array
+  var i = 320*240;
+  while(--i >= 0)
+    corners[i] = new jsfeat.point2d_t(0,0,0,0);
+  img_u8 = new jsfeat.matrix_t(320, 240, jsfeat.U8_t | jsfeat.C1_t);
+  console.log("JSFeat initialized.");
 }
 
 function animate() {
@@ -115,22 +133,58 @@ function animate() {
 
 function render()  {
   statprofiler.new_frame();
-  statprofiler.start("Render time");
 
+  var CalculateFastFeatures = true;
+  var DisplayFastFeatures = true;
+
+  statprofiler.start("FAST features");
   for (var i=0; i < NUM_CAMERAS; i++) {
     if (video[i].readyState === video[i].HAVE_ENOUGH_DATA) {
-       videoImageContext[i].drawImage(
-       	  video[i], 0, 0, videoImage[i].width, videoImage[i].height);
-    if (videoTexture[i])
-      videoTexture[i].needsUpdate = true;
+      videoImageContext[i].drawImage( video[i],
+          0, 0, videoImage[i].width, videoImage[i].height);
+      if (videoTexture[i])
+        videoTexture[i].needsUpdate = true;
+
+      // Calculate the FAST features if they're enabled.
+      if (CalculateFastFeatures) {
+        var imageData = videoImageContext[i].getImageData(0, 0, 320, 240);
+
+        jsfeat.imgproc.grayscale(imageData.data, img_u8.data);
+        var count = jsfeat.fast_corners.detect(img_u8, corners, 5);
+      }
+      // Display the FAST features if calculated and display is enabled.
+      if (CalculateFastFeatures && DisplayFastFeatures) {
+        var data_u32 = new Uint32Array(imageData.data.buffer);
+        render_corners(corners, count, data_u32, 320);
+        videoImageContext[i].putImageData(imageData, 0, 0);
+      }
     }
   }
-  renderer.render(scene, camera);
+  statprofiler.stop("FAST features");
 
+  statprofiler.start("Render time");
+  renderer.render(scene, camera);
   statprofiler.stop("Render time");
+
   document.getElementById('log').innerHTML  = (statprofiler.log());
 }
 
 function update() {
   // Empty for the moment.
+}
+
+
+function render_corners(corners, count, img, step) {
+   var pix = (0xff << 24) | (0x00 << 16) | (0xff << 8) | 0x00;
+   for(var i=0; i < count; ++i)
+   {
+       var x = corners[i].x;
+       var y = corners[i].y;
+       var off = (x + y * step);
+       img[off] = pix;
+       img[off-1] = pix;
+       img[off+1] = pix;
+       img[off-step] = pix;
+       img[off+step] = pix;
+   }
 }
