@@ -1,325 +1,100 @@
 
-// WebGL stuff copied from Mozilla Dev Network getting started with WebGL docs.
-// http://developer.mozilla.org/en-US/docs/Web/WebGL/Getting_started_with_WebGL
+// Adapted from http://stemkoski.github.io/Three.js/#webcam-texture
+// MAIN
 
-var gl; // A global variable for the WebGL context
+// standard global variables
+var container, scene, camera, renderer;
 
-var videoElement;
-var cameraTexture;
-var videoElement2;
-var cameraTexture2;
-var videoElement3;
-var cameraTexture3;
-
-var CameraOverlapInPercentage;
+// custom global variables
+var video, videoImage, videoImageContext, videoTexture;
 
 function startWebGL() {
-  var canvas = document.getElementById("glcanvas");
-
-  gl = initWebGL(canvas);      // Initialize the GL context
-
-  // Only continue if WebGL is available and working
-  if (gl) {
-    gl.clearColor(0.0, 1.0, 0.0, 1.0);                      // Set clear color to black, fully opaque
-    gl.enable(gl.DEPTH_TEST);                               // Enable depth testing
-    gl.depthFunc(gl.LEQUAL);                                // Near things obscure far things
-    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);      // Clear the color as well as the depth buffer.
-  }
-
-  initBuffers();
-
-  initShaders();
-
-  videoElement = document.getElementById("view1");
-  videoElement.addEventListener("canplaythrough", startVideo, true);
-
-  videoElement2 = document.getElementById("view2");
-  videoElement2.addEventListener("canplaythrough", startVideo, true);
-
-  videoElement3 = document.getElementById("view3");
-  videoElement3.addEventListener("canplaythrough", startVideo, true);
-
-  canvas = document.getElementById("glcanvas");
-  gl.viewport(0, 0, canvas.width, canvas.height);
-
-  CameraOverlapInPercentage = 10;
-  return 1;
+  init();
+  animate();
 }
 
-function startVideo() {
-  console.log("starting video playback");
-  initTextures();
-  intervalID = setInterval(drawScene, 50);
+// FUNCTIONS 		
+function init() 
+{
+	// SCENE
+	scene = new THREE.Scene();
+	
+	// CAMERA
+	var canvas = document.getElementById("glcanvas");
+	var SCREEN_WIDTH = 960;
+    var SCREEN_HEIGHT = 240;
+	
+	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 1000;
+	camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
+	scene.add(camera);
+	camera.position.set(0,150,400);
+	camera.lookAt(scene.position);	
+	
+	// RENDERER
+	renderer = new THREE.CanvasRenderer(); 
+	renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+	
+	container = document.getElementById("glcanvas");
+	container.appendChild( renderer.domElement );
+	// CONTROLS
+	//controls = new THREE.OrbitControls( camera, renderer.domElement );
+	// LIGHT
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(0,250,0);
+	scene.add(light);
+	
+    // FLOOR
+	var floorTexture = new THREE.ImageUtils.loadTexture( 'checkerboard.jpg' );
+	floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
+	floorTexture.repeat.set( 10, 10 );
+	var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+	var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
+	var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+	floor.position.y = -0.5;
+	floor.rotation.x = Math.PI / 2;
+	scene.add(floor);	
+	
+	// VIDEO //
+	video = document.getElementById('view1');
+	
+	videoImage = document.getElementById( 'canvas1' );
+	videoImageContext = videoImage.getContext( '2d' );
+	// background color if no video present
+	videoImageContext.fillStyle = '#000000';
+	videoImageContext.fillRect( 0, 0, videoImage.width, videoImage.height );
+
+	videoTexture = new THREE.Texture( videoImage );
+	videoTexture.minFilter = THREE.LinearFilter;
+	videoTexture.magFilter = THREE.LinearFilter;
+	
+	var movieMaterial = new THREE.MeshBasicMaterial( { map: videoTexture, overdraw: true, side:THREE.DoubleSide } );
+	// the geometry on which the movie will be displayed;
+	// 		movie image will be scaled to fit these dimensions.
+	var movieGeometry = new THREE.PlaneGeometry( 133, 100, 1, 1 );
+	var movieScreen = new THREE.Mesh( movieGeometry, movieMaterial );
+	movieScreen.position.set(0,50,0);
+	scene.add(movieScreen);
+	
+	camera.position.set(0,50,300);
+	camera.lookAt(movieScreen.position);
+				
+	console.log("Three GL context and data initialized.");	
 }
 
-function initWebGL(canvas) {
-  gl = null;
-
-  try {
-    // Try to grab the standard context. If it fails, fallback to experimental.
-    gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-  }
-  catch(e) {}
-
-  // If we don't have a GL context, give up now
-  if (!gl) {
-    alert("Unable to initialize WebGL. Your browser may not support it.");
-    gl = null;
-  }
-  console.log("WebGL context initialised.");
-
-  return gl;
+function animate() {
+    requestAnimationFrame( animate );
+	render();		
+	update();
 }
 
-var horizAspect = 240.0/640.0;
-
-function initBuffers() {
-  squareVerticesBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
-  var vertices = [
-    -1.33, -1.0,  3.0,
-     1.33, -1.0,  3.0,
-     1.33,  1.0,  3.0,
-    -1.33,  1.0,  3.0
-  ];
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-
-
-  //squareVerticesNormalBuffer = gl.createBuffer();
-  //gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesNormalBuffer);
-  //var normals = [
-  //  0.0,  0.0,  1.0,
-  //  0.0,  0.0,  1.0,
-  //  0.0,  0.0,  1.0,
-  //  0.0,  0.0,  1.0
-  //];
-  //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
-
-  squareVerticesTextureCoordBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesTextureCoordBuffer);
-  var textureCoordinates = [
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
-  ];
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates),
-      gl.STATIC_DRAW);
-
-  squareVerticesIndexBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareVerticesIndexBuffer);
-  var squareVertexIndices = [
-    0,  2,  3,
-    0,  1,  2,
-  ]
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,
-      new Uint16Array(squareVertexIndices), gl.STATIC_DRAW);
-
-  console.log("WebGL buffers initialised.");
+function update() {		
 }
 
-function initShaders() {
-  var fragmentShader = getShader(gl, "shader-fs");
-  var vertexShader = getShader(gl, "shader-vs");
-
-  // Create the shader program from the global GL context.
-  shaderProgram = gl.createProgram();
-  gl.attachShader(shaderProgram, vertexShader);
-  gl.attachShader(shaderProgram, fragmentShader);
-  gl.linkProgram(shaderProgram);
-
-  // If creating the shader program failed, alert.
-  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-    alert("Unable to initialize the shader program.");
-  }
-
-  gl.useProgram(shaderProgram);
-  console.log("WebGL shaders and program initialised.");
-
-  //vertexNormalAttribute = gl.getAttribLocation(shaderProgram, "aVertexNormal");
-  //gl.enableVertexAttribArray(vertexNormalAttribute);
-
-  vertexPositionAttribute =
-      gl.getAttribLocation(shaderProgram, "aVertexPosition");
-  gl.enableVertexAttribArray(vertexPositionAttribute);
-
-  textureCoordAttribute = gl.getAttribLocation(shaderProgram, "aTextureCoord");
-  gl.enableVertexAttribArray(textureCoordAttribute);
-}
-
-//function initTextures() {
-//  cameraTexture = createTextureFromImage(videoElement);
-//  console.log("WebGL textures initialised");
-//}
-
-function initTextures() {
-  cameraTexture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-
-  cameraTexture2 = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, cameraTexture2);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-
-  cameraTexture3 = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, cameraTexture3);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-
-  updateTexture();
-}
-function updateTexture() {
-  gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
-        gl.UNSIGNED_BYTE, videoElement);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-
-  gl.bindTexture(gl.TEXTURE_2D, cameraTexture2);
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
-        gl.UNSIGNED_BYTE, videoElement2);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-
-  gl.bindTexture(gl.TEXTURE_2D, cameraTexture3);
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
-        gl.UNSIGNED_BYTE, videoElement3);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-}
-
-function drawScene() {
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-  CameraOverlapInPercentage = document.getElementById('overlapSlider').value;
-
-  // 45 refers to a 45 degrees field of view.
-  perspectiveMatrix = makePerspective(45, 960 / 240, 0.1, 100.0);
-
-  loadIdentity();
-  mvTranslate([-2.5, 0.0, -6.0]);
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
-  gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesTextureCoordBuffer);
-  gl.vertexAttribPointer(textureCoordAttribute, 2, gl.FLOAT, false, 0, 0);
-
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, cameraTexture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
-        gl.UNSIGNED_BYTE, videoElement);
-  gl.uniform1i(gl.getUniformLocation(shaderProgram, "uSampler"), 0);
-
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareVerticesIndexBuffer);
-  setMatrixUniforms();
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-
-
-  mvTranslate([(2.5*(100-CameraOverlapInPercentage)/100.0), 0.0, 0.0]);
-
-  gl.activeTexture(gl.TEXTURE1);
-  gl.bindTexture(gl.TEXTURE_2D, cameraTexture2);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
-        gl.UNSIGNED_BYTE, videoElement2);
-  gl.uniform1i(gl.getUniformLocation(shaderProgram, "uSampler"), 1);
-
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareVerticesIndexBuffer);
-  setMatrixUniforms();
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-
-  mvTranslate([(2.5*(100-CameraOverlapInPercentage)/100.0), 0.0, 0.0]);
-
-  gl.activeTexture(gl.TEXTURE2);
-  gl.bindTexture(gl.TEXTURE_2D, cameraTexture3);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,
-        gl.UNSIGNED_BYTE, videoElement3);
-  gl.uniform1i(gl.getUniformLocation(shaderProgram, "uSampler"), 2);
-
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, squareVerticesIndexBuffer);
-  setMatrixUniforms();
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-
-
-}
-
-
-function getShader(gl, id) {
-  var shaderScript, theSource, currentChild, shader;
-
-  shaderScript = document.getElementById(id);
-
-  if (!shaderScript) {
-    return null;
-  }
-
-  theSource = "";
-  currentChild = shaderScript.firstChild;
-
-  while(currentChild) {
-    if (currentChild.nodeType == currentChild.TEXT_NODE) {
-      theSource += currentChild.textContent;
-    }
-    currentChild = currentChild.nextSibling;
-  }
-
-  if (shaderScript.type == "x-shader/x-fragment") {
-    shader = gl.createShader(gl.FRAGMENT_SHADER);
-    console.log("Fragment shader loaded.");
-  } else if (shaderScript.type == "x-shader/x-vertex") {
-    shader = gl.createShader(gl.VERTEX_SHADER);
-    console.log("Vertex shader loaded.");
-  } else {
-     // Unknown shader type
-     return null;
-  }
-
-  gl.shaderSource(shader, theSource);
-
-  // Compile the shader program
-  gl.compileShader(shader);
-
-  // See if it compiled successfully
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      alert("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
-      return null;
-  }
-
-  return shader;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Utility functions.
-
-function loadIdentity() {
-  mvMatrix = Matrix.I(4);
-}
-
-function multMatrix(m) {
-  mvMatrix = mvMatrix.x(m);
-}
-
-function mvTranslate(v) {
-  multMatrix(Matrix.Translation($V([v[0], v[1], v[2]])).ensure4x4());
-}
-
-function setMatrixUniforms() {
-  var pUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-  gl.uniformMatrix4fv(pUniform, false, new Float32Array(perspectiveMatrix.flatten()));
-
-  var mvUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
-  gl.uniformMatrix4fv(mvUniform, false, new Float32Array(mvMatrix.flatten()));
+function render()  {	
+	if ( video.readyState === video.HAVE_ENOUGH_DATA ) {
+		videoImageContext.drawImage( video, 0, 0, videoImage.width, videoImage.height );
+		if ( videoTexture ) 
+			videoTexture.needsUpdate = true;
+	}
+	renderer.render( scene, camera );
 }
