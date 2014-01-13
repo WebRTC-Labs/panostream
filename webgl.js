@@ -6,7 +6,7 @@
 // Adapted from http://stemkoski.github.io/Three.js/#webcam-texture
 
 // Amount of cameras to render in the 3D world.
-var NUM_CAMERAS = 3;
+var NUM_CAMERAS = 2;
 
 // ThreeJS global variables.
 var container, scene, camera, renderer;
@@ -78,7 +78,7 @@ function init()
   // and use it to retrieve the data.
   var movieScreen = [];
   for (var i=0; i < NUM_CAMERAS; i++) {
-    video[i] = document.getElementById('view' + (i+1));
+    video[i] = document.getElementById('vid' + (i+1));
 
     videoImage[i] = document.getElementById('canvas' + (i+1));
     videoImageContext[i] = videoImage[i].getContext('2d');

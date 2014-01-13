@@ -17,6 +17,13 @@
   <!-- Load the polyfill to switch-hit between Chrome and Firefox. -->
   <script src="adapter.js"></script>
 
+  <!-- This is the NaCl/PNaCl part -->
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="-1">
+  <title>NaClMiguelao</title>
+  <script type="text/javascript" src="common.js"></script>
+  <script type="text/javascript" src="stitching.js"></script>
+
   <!--
     Load the code that creates the scene, caneras and maps video feeds to 3D
     textures. Internally it uses:
@@ -39,9 +46,26 @@
   </script>
 
 </head>
-<body>
+<body data-name="nacl_glue"
+      data-tools="glibc pnacl linux"
+      data-configs="Release"
+      data-path="{tc}/..">
 
 <div id="wrapper">
+    <!--
+  Just as in part1, the <embed> element will be wrapped inside the <div>
+  element with the id "listener". In part1, the embed was specified in HTML,
+  here the common.js module creates a new <embed> element and adds it to the
+  <div> for us.
+  -->
+  <div id="listener"></div>
+
+  <!--
+  This element will be populated with the messages that come from the NaCl
+  module. See example.js.
+  -->
+  <div id="log" style="display:none"></div>
+
   <div>
     Current webcam: <select id="videosrc"></select>
     <button id="request-video" onclick="requestVideo();">Request video</button>
@@ -51,7 +75,7 @@
   <div>Panorama:</div>
   <div id="container">
     <div id="left">
-      <video width="320" height="240" id="view1" autoplay="autoplay"
+      <video width="320" height="240" id="vid1" autoplay="autoplay"
           class="video-area"></video>
       <div id="view1-label"></div>
       <div>
@@ -61,7 +85,7 @@
       </div>
     </div>
     <div id="left">
-      <video width="320" height="240" id="view2" autoplay="autoplay"
+      <video width="320" height="240" id="vid2" autoplay="autoplay"
           class="video-area"></video>
       <div id="view2-label"></div>
       <div>
@@ -71,7 +95,7 @@
       </div>
     </div>
     <div id="left">
-      <video width="320" height="240" id="view3" autoplay="autoplay"
+      <video width="320" height="240" id="vid33" autoplay="autoplay"
           class="video-area"></video>
       <div id="view3-label"></div>
       <div>
@@ -87,11 +111,17 @@
   <canvas id="canvas3" width="320" height="240" style="display:none"></canvas>
   <div id="glcanvas" width="960" height="240" ></div>
 
-  <div id="log">hi</div>
+  <br>
+  <button id="btn_click" onclick="start()" disabled="true">
+    Start video tags
+  </button>
+  <button id="btn_calibrate" onclick="calibrate()" disabled="true">
+    Calibrate, you evil monster!
+  </button>
 
   <canvas id="tmpcanvas1" width="320" height="240" style="display:none"></canvas>
   <canvas id="tmpcanvas2" width="320" height="240" style="display:none"></canvas>
-  <p id="overlap" onclick="updateOverlap()">update overlap</p>
+
 </div>
 </body>
 </html>
