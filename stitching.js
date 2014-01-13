@@ -12,7 +12,6 @@ function moduleDidLoad() {
   // in the plugin, so it is fine to hide it.
   common.hideModule();
 
-  document.getElementById('btn_click').disabled = false;
   document.getElementById('btn_calibrate').disabled = false;
 }
 

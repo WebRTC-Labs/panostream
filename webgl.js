@@ -134,8 +134,8 @@ function animate() {
 function render()  {
   statprofiler.new_frame();
 
-  var CalculateFastFeatures = true;
-  var DisplayFastFeatures = true;
+  var CalculateFastFeatures = false;
+  var DisplayFastFeatures = false;
 
   statprofiler.start("FAST features");
   for (var i=0; i < NUM_CAMERAS; i++) {

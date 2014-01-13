@@ -3,4 +3,7 @@
 .project
 .settings
 panostream.sublime-workspace
+*.bc
+*.pexe
+
 

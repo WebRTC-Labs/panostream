@@ -4,7 +4,7 @@ $ = function(id) {
 
 var gVideoCounter = 1;
 
-// Dict mapping video tag id to stream objects, i.e. "view1" and so on.
+// Dict mapping video tag id to stream objects, i.e. "vid1" and so on.
 var gStreams = {};
 
 function requestVideo(opt_video_id) {
@@ -50,7 +50,7 @@ function getUserMediaFailedCallback(error) {
 
 function getUserMediaOkCallback(stream, video_id) {
    // Call the polyfill wrapper to attach the media stream to this element.
-   var videoTagId = 'view' + gVideoCounter++;
+   var videoTagId = 'vid' + gVideoCounter++;
    attachMediaStream($(videoTagId), stream);
    $(videoTagId + '-label').innerHTML = 'Video ID: ...' +
        video_id.substring(40);
@@ -107,9 +107,9 @@ function getDevices() {
     if (localStorage.view2 !=="undefined") {
       requestVideo(localStorage.view2);
     }
-    if (localStorage.view3 !=="undefined") {
-      requestVideo(localStorage.view3);
-    }
+    //if (localStorage.view3 !=="undefined") {
+    //  requestVideo(localStorage.view3);
+    //}
   } else {
     debug('Sorry! No web storage support in your browser.');
   }
@@ -128,74 +128,13 @@ function resetAllVideo() {
     gStreams[id].getVideoTracks()[0].stop();
   }
   // Reset the video tags to avoid the frozen image.
-  for (var i=1; i<=3; i++) {
-    var videoTag = $('view' + i);
+  for (var i=1; i<=2; i++) {
+    var videoTag = $('vid' + i);
     if (videoTag.currentTime > 0) {
       videoTag.currentTime = 0;
       videoTag.load();
     }
   }
-}
-
-var pixelsize = 4;
-
-function updateOverlap() {
-  var video1 = $('view1');
-  var video2 = $('view2');
-  var tmpcanvas1 = $('tmpcanvas1');
-  var tmpcanvas2 = $('tmpcanvas2');
-  var context1 = tmpcanvas1.getContext('2d');
-  var context2 = tmpcanvas2.getContext('2d');
-  context1.drawImage(video1, 0, 0, tmpcanvas1.width, tmpcanvas1.height);
-  context2.drawImage(video2, 0, 0, tmpcanvas2.width, tmpcanvas2.height);
-  var pixels1 = context1.getImageData(0, 0, tmpcanvas1.width, tmpcanvas1.height);
-  var pixels2 = context2.getImageData(0, 0, tmpcanvas2.width, tmpcanvas2.height);
-  var overlap = estimateOverlap(pixels1, pixels2);
-  document.getElementById('overlapSlider').value = 100 * overlap / tmpcanvas1.width;
-  var overlaptext = $('overlap');
-  overlaptext.innerHTML = document.getElementById('overlapSlider').value;
-}
-
-function estimateOverlap(pixels1, pixels2) {
-  var minOverlap = 1;
-  var initialized = false;
-  for (var y = 0; y < tmpcanvas1.height; ++y) {
-    for (var c = 0; c < pixelsize; ++c) {
-      if (pixels1.data[(tmpcanvas1.width * y + tmpcanvas1.width - 1) * pixelsize + c] != 0 && pixels2.data[(tmpcanvas2.width * y) * pixelsize + c] != 0) {
-        initialized = true;
-      }
-    }
-  }
-  if (initialized) {
-    var minCorrelation = 0;
-    for (var y = 0; y < tmpcanvas1.height; y += 8) {
-      for (var c = 0; c < (pixelsize - 1); ++c) {
-        var tmp = pixels1.data[(tmpcanvas1.width * y + tmpcanvas1.width - 1) * pixelsize + c] - pixels2.data[(tmpcanvas2.width * y) * pixelsize + c];
-        tmp *= tmp;
-        minCorrelation += tmp;
-      }
-    }
-    for (var overlap = 2; overlap < tmpcanvas1.width; ++overlap) {
-      var correlation = 0;
-      for (var x = 0; x < overlap; ++x) {
-        for (var y = 0; y < tmpcanvas1.height; y += 8) {
-          for (var c = 0; c < (pixelsize - 1); ++c) {
-            var tmp = pixels1.data[(tmpcanvas1.width * y + tmpcanvas1.width - x - 1) * pixelsize + c] - pixels2.data[(tmpcanvas2.width * y + x) * pixelsize + c];
-            tmp *= tmp;
-            correlation += tmp;
-          }
-        }
-      }
-      correlation /= overlap;
-      if (correlation < minCorrelation) {
-        minCorrelation = correlation;
-        minOverlap = overlap;
-      }
-    }
-  } else {
-    minOverlap = 0;
-  }
-  return minOverlap
 }
 
 function debug(txt) {

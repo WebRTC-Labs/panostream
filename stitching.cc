@@ -132,9 +132,9 @@ bool Stitching::CalculateHomography() {
       msg_handler_->SendMessage("Homography calculated in: " +
           print(t*1000000) + "ns");
     }
-    msg_handler_->SendMessage("H=[[" + print(homography_.at<double>(0,0)) + print(homography_.at<double>(0,1)) + print(homography_.at<double>(0,2)) + ']');
-    msg_handler_->SendMessage("   [" + print(homography_.at<double>(1,0)) + print(homography_.at<double>(1,1)) + print(homography_.at<double>(1,2)) + ']');
-    msg_handler_->SendMessage("   [" + print(homography_.at<double>(2,0)) + print(homography_.at<double>(2,1)) + print(homography_.at<double>(2,2)) + "]]");
+    msg_handler_->SendMessage("H=[[" + print(homography_.at<double>(0,0)) +" "+ print(homography_.at<double>(0,1)) +" "+ print(homography_.at<double>(0,2)) + ']');
+    msg_handler_->SendMessage("   [" + print(homography_.at<double>(1,0)) +" "+ print(homography_.at<double>(1,1)) +" "+ print(homography_.at<double>(1,2)) + ']');
+    msg_handler_->SendMessage("   [" + print(homography_.at<double>(2,0)) +" "+ print(homography_.at<double>(2,1)) +" "+ print(homography_.at<double>(2,2)) + "]]");
 
     for (int row = 0; row < 3; ++row)
       for ( int column=0; column < 3; ++column)
