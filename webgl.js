@@ -173,6 +173,13 @@ function update() {
   // Empty for the moment.
 }
 
+function updateWebGLWithHomography(homography) {
+  // Now we need to calculate the movieScreen[1].position with the projection
+  // of the four corners. Then reset the associated rotation.
+  //  movieScreen[i].position.set(videoImage[0].width*(i-1), 50, 50*Math.abs(i-1));
+  //  movieScreen[i].rotation.set(0, (Math.PI /8)*(1-i), 0);
+
+}
 
 function render_corners(corners, count, img, step) {
    var pix = (0xff << 24) | (0x00 << 16) | (0xff << 8) | 0x00;

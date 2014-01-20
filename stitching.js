@@ -27,6 +27,14 @@ function handleMessage(message) {
     // |row|, |column| range from 0 to 2 and value is float.
     homography[message.data['row']][message.data['column']] =
         message.data['value'];
+
+    if (homography[0].length==3 && homography[1].length==3 && homography[2].length==3) {
+      console.log(" H=[" + homography[0][0].toFixed(3) +" "+ homography[0][1].toFixed(3) +" "+ homography[0][2].toFixed(3) + "]");
+      console.log("   [" + homography[1][0].toFixed(3) +" "+ homography[1][1].toFixed(3) +" "+ homography[1][2].toFixed(3) + "]");
+      console.log("   [" + homography[2][0].toFixed(3) +" "+ homography[2][1].toFixed(3) +" "+ homography[2][2].toFixed(3) + "]");
+
+      updateWebGLWithHomography(homography);
+    }
   } else {
     // Dump stuff to special PNaCl output area.
     var logEl = document.getElementById('log');
@@ -35,7 +43,6 @@ function handleMessage(message) {
     // And/Or to JS Console.
     console.log(message.data);
   }
-
 }
 
 // Calibrate does a whole lot of things: Plugs the <video> tags into their
