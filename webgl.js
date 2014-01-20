@@ -17,6 +17,8 @@ var videoImage = [];
 var videoImageContext = [];
 var videoTexture = [];
 
+var movieScreen = [];
+
 // Profiler variable;
 var statprofiler = new profiler();
 
@@ -76,7 +78,6 @@ function init()
 
   // Camera video input. The idea is to plug a camera <video> feed into a canvas
   // and use it to retrieve the data.
-  var movieScreen = [];
   for (var i=0; i < NUM_CAMERAS; i++) {
     video[i] = document.getElementById('vid' + (i+1));
 
@@ -97,8 +98,8 @@ function init()
         new THREE.PlaneGeometry(videoImage[0].width, videoImage[0].height, 1, 1);
     movieScreen[i] = new THREE.Mesh(movieGeometry, movieMaterial);
 
-    movieScreen[i].position.set(videoImage[0].width*(i-1), 50, 50*Math.abs(i-1));
-    movieScreen[i].rotation.set(0, (Math.PI /8)*(1-i), 0);
+    movieScreen[i].position.set(0, 0, -100);
+    movieScreen[i].rotation.set(0, 0, 0); // (Math.PI /8)*(1-i)
     scene.add(movieScreen[i]);
   }
   camera.position.set(0,50,400);
@@ -173,11 +174,35 @@ function update() {
   // Empty for the moment.
 }
 
-function updateWebGLWithHomography(homography) {
+function updateWebGLWithHomography(H) {
   // Now we need to calculate the movieScreen[1].position with the projection
   // of the four corners. Then reset the associated rotation.
-  //  movieScreen[i].position.set(videoImage[0].width*(i-1), 50, 50*Math.abs(i-1));
-  //  movieScreen[i].rotation.set(0, (Math.PI /8)*(1-i), 0);
+  movieScreen[0].geometry = new THREE.PlaneGeometry(videoImage[0].width, videoImage[0].height);
+
+  alpha = Math.max(Math.max(H[0][0], H[0][1]), Math.max(H[1][0], H[1][1]));
+  //if (alpha>1.0) {
+  //  H[0][0] = H[0][0] / alpha;
+  //  H[0][1] = H[0][1] / alpha;
+  //  H[1][0] = H[1][0] / alpha;
+  //  H[1][1] = H[1][1] / alpha;
+  //}
+
+  movieScreen[0].geometry.vertices[0].x = applyPerspectiveToPoint_x(-160, 120,H);
+  movieScreen[0].geometry.vertices[0].y = applyPerspectiveToPoint_y(-160, 120,H);
+  movieScreen[0].geometry.vertices[1].x = applyPerspectiveToPoint_x( 160, 120,H);
+  movieScreen[0].geometry.vertices[1].y = applyPerspectiveToPoint_y( 160, 120,H);
+  movieScreen[0].geometry.vertices[2].x = applyPerspectiveToPoint_x(-160,-120,H);
+  movieScreen[0].geometry.vertices[2].y = applyPerspectiveToPoint_y(-160,-120,H);
+  movieScreen[0].geometry.vertices[3].x = applyPerspectiveToPoint_x( 160,-120,H);
+  movieScreen[0].geometry.vertices[3].y = applyPerspectiveToPoint_y( 160,-120,H);
+  movieScreen[0].geometry.verticesNeedUpdate = true;
+
+  //H4 = new THREE.Matrix4(H[0][0], H[0][1], 0.0, H[0][2],
+  //                       H[1][0], H[1][1], 0.0, H[1][2],
+  //                           0.0,     0.0, 1.0,     0.0,
+  //                       H[2][0], H[2][1], 0.0, H[2][2]);
+  //movieScreen[0].geometry.applyMatrix(H4);
+  //movieScreen[0].geometry.verticesNeedUpdate = true;
 
 }
 
@@ -194,4 +219,14 @@ function render_corners(corners, count, img, step) {
        img[off-step] = pix;
        img[off+step] = pix;
    }
+}
+
+// Applying a perspective to a point (x,y) means:
+// x' = (H11 x + H12 y + H13) / (H31 x + H32 y + H33)
+// y' = (H21 x + H22 y + H23) / (H31 x + H32 y + H33)   (matrix index notation)
+function applyPerspectiveToPoint_x(x, y, H) {
+  return (H[0][0]*x + H[0][1]*y + H[0][2])/(H[2][0]*x + H[2][1]*y + H[2][2]);
+}
+function applyPerspectiveToPoint_y(x, y, H) {
+  return (H[1][0]*x + H[1][1]*y + H[1][2])/(H[2][0]*x + H[2][1]*y + H[2][2]);
 }

@@ -34,6 +34,7 @@ function handleMessage(message) {
       console.log("   [" + homography[2][0].toFixed(3) +" "+ homography[2][1].toFixed(3) +" "+ homography[2][2].toFixed(3) + "]");
 
       updateWebGLWithHomography(homography);
+      homography[0].length = homography[1].length = homography[2].length = 0;
     }
   } else {
     // Dump stuff to special PNaCl output area.
