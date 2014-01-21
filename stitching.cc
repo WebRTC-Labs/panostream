@@ -43,7 +43,7 @@ bool Stitching::InitialiseOpenCV(int width, int height) {
   // (FAST, SIFT) / SIFT  / FlannBased
   // (FAST, ORB)  / ORB   / BruteForce  <-- BruteForce in OpenCV legacy module.
   // (FAST, ORB)  / BRIEF / BruteForce
-  // (FAST, SURF) / FREAK / BruteForce
+  // (FAST, SURF) / FREAK / BruteForce  <-- Fast/Freak/Bruteforce known to work.
 
   detector_ = cv::FeatureDetector::create("FAST");
   if (!detector_)
@@ -94,26 +94,27 @@ bool Stitching::CalculateHomography() {
     print(matches_.size()));
 
   // Quick calculation of max and min distances between keypoints
-  //double max_dist = -1.0; double min_dist = 1000.0;
-  //for( int i = 0; i < descriptors_[0]->rows; i++ ) {
-  //  double dist = matches_[i].distance;
-  //  if( dist < min_dist ) min_dist = dist;
-  //  if( dist > max_dist ) max_dist = dist;
-  //}
-  //msg_handler_->SendMessage("Calculated min-max descriptor distance, min=" +
-  //  print(min_dist) + " max=" + print(max_dist) );
+  double max_dist = -1.0; double min_dist = 1000.0;
+  for( int i = 0; i < descriptors_[0]->rows; i++ ) {
+    double dist = matches_[i].distance;
+    if( dist < min_dist ) min_dist = dist;
+    if( dist > max_dist ) max_dist = dist;
+  }
+  msg_handler_->SendMessage("Calculated min-max descriptor distance, min=" +
+    print(min_dist) + " max=" + print(max_dist) );
 
   // Use only "good" matches (i.e. whose distance is less than 3*min_dist )
-  //cv::vector<cv::DMatch> new_good_matches;
-  //for( int i = 0; i < descriptors_[0]->rows; i++ ) {
-  //  if( matches_[i].distance < 10*min_dist ) {
-  //    new_good_matches.push_back(matches_[i]);
-  //  }
-  //}
-  //if (new_good_matches.size() > 10) good_matches_ = new_good_matches;
-  //msg_handler_->SendMessage("Filtered descriptor pairs, matches: " +
-  //  print(good_matches_.size()));
-  good_matches_ = matches_;
+  cv::vector<cv::DMatch> new_good_matches;
+  for( int i = 0; i < descriptors_[0]->rows; i++ ) {
+    if( matches_[i].distance < 2*min_dist ) {
+      new_good_matches.push_back(matches_[i]);
+    }
+  }
+  if (new_good_matches.size() > 10)
+    good_matches_ = new_good_matches;
+  msg_handler_->SendMessage("Filtered descriptor pairs,  #matches: " +
+    print(new_good_matches.size()));
+  //good_matches_ = new_good_matches_;
 
   // Redistribute feature points according to selected matches.
   std::vector<cv::Point2f> obj;

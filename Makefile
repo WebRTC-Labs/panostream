@@ -31,6 +31,7 @@ SRCS := stitching.cc nacl_glue.cc
 CXXFLAGS += -I../naclports/src/out/repository/opencv-2.4.7/include/
 LDFLAGS  += -lopencv_features2d \
 	          -lopencv_flann \
+            -lopencv_nonfree \
             -lopencv_legacy \
             -lopencv_calib3d \
             -lopencv_imgproc \
