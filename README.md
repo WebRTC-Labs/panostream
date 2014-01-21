@@ -16,19 +16,16 @@ Example for Canary on Mac:
 /Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary --allow-file-access-from-files --use-fake-ui-for-media-stream
 <code>
 
-For quick development, panostream.html can be accessed on this URL:
-
-<code>
-http://htmlpreview.github.io/?https://github.com/Miguelao/panostream/blob/master/panostream.html
-</code>
-
 ### How to compile and run the PNaCl module
 
-Make sure you have NaCl SDK [1] installed in your (Linux/Mac) machine. Export
-its root `export NACL_SDK_ROOT=/path/to/naclsdk/pepper_33`, then from the
-panostream folder run `make` and then `make serve` (python needed). The served
-page can be accessed locally in http://localhost:5103/panostream.html.
+Make sure you have [NaCl SDK](https://developers.google.com/native-client/sdk/download)
+installed in your (Linux/Mac) machine. Export its root
+`export NACL_SDK_ROOT=/path/to/naclsdk/pepper_33`, then from the panostream
+folder run `make` and then `make serve` (python needed). The served
+page can be accessed locally in [http://localhost:5103/panostream.html.]
 
+### GitHub Tricks
 
-
-[1]: https://developers.google.com/native-client/sdk/download
+For quick development, panostream.html (actually any html in GitHub) can be
+accessed on this URL:
+http://htmlpreview.github.io/?https://github.com/Miguelao/panostream/blob/master/panostream.html
