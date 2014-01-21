@@ -112,9 +112,10 @@ bool Stitching::CalculateHomography() {
   }
   if (new_good_matches.size() > 10)
     good_matches_ = new_good_matches;
+  else
+    good_matches_ = matches_;
   msg_handler_->SendMessage("Filtered descriptor pairs,  #matches: " +
     print(new_good_matches.size()));
-  //good_matches_ = new_good_matches_;
 
   // Redistribute feature points according to selected matches.
   std::vector<cv::Point2f> obj;
@@ -131,7 +132,7 @@ bool Stitching::CalculateHomography() {
     if (cv::getTickFrequency() > 1.0) {
       double t = ((double)cv::getTickCount() - t_0)/cv::getTickFrequency();
       msg_handler_->SendMessage("Homography calculated in: " +
-          print(t*1000000) + "ns");
+          print(t*1000) + "us");
     }
     //msg_handler_->SendMessage("H=[[" + print(homography_.at<double>(0,0)) +" "+ print(homography_.at<double>(0,1)) +" "+ print(homography_.at<double>(0,2)) + ']');
     //msg_handler_->SendMessage("   [" + print(homography_.at<double>(1,0)) +" "+ print(homography_.at<double>(1,1)) +" "+ print(homography_.at<double>(1,2)) + ']');

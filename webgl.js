@@ -119,7 +119,14 @@ function render()  {
   statprofiler.new_frame();
 
   statprofiler.start("Render time");
-  renderer.render(scene, camera);
+  for (var i=0; i < NUM_CAMERAS; i++) {
+    if (video[i].readyState === video[i].HAVE_ENOUGH_DATA) {
+      videoImageContext[i].drawImage( video[i],
+          0, 0, videoImage[i].width, videoImage[i].height);
+      if (videoTexture[i])
+        videoTexture[i].needsUpdate = true;  renderer.render(scene, camera);
+    }
+  }
   statprofiler.stop("Render time");
 
   document.getElementById('log').innerHTML  = (statprofiler.log());
