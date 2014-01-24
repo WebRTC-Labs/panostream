@@ -6,7 +6,7 @@
 // Adapted from http://stemkoski.github.io/Three.js/#webcam-texture
 
 // Amount of cameras to render in the 3D world.
-var NUM_CAMERAS = 3;
+var NUM_CAMERAS = 2;
 
 // ThreeJS global variables.
 var container, scene, camera, renderer;
@@ -17,12 +17,10 @@ var videoImage = [];
 var videoImageContext = [];
 var videoTexture = [];
 
+var movieScreen = [];
+
 // Profiler variable;
 var statprofiler = new profiler();
-
-// Detected features, erroneously called corners.
-var corners = []; corners.length = 320*240;
-var img_u8;
 
 // Entry point of the webgl.js file.
 function startWebGL() {
@@ -76,9 +74,8 @@ function init()
 
   // Camera video input. The idea is to plug a camera <video> feed into a canvas
   // and use it to retrieve the data.
-  var movieScreen = [];
   for (var i=0; i < NUM_CAMERAS; i++) {
-    video[i] = document.getElementById('view' + (i+1));
+    video[i] = document.getElementById('vid' + (i+1));
 
     videoImage[i] = document.getElementById('canvas' + (i+1));
     videoImageContext[i] = videoImage[i].getContext('2d');
@@ -97,8 +94,8 @@ function init()
         new THREE.PlaneGeometry(videoImage[0].width, videoImage[0].height, 1, 1);
     movieScreen[i] = new THREE.Mesh(movieGeometry, movieMaterial);
 
-    movieScreen[i].position.set(videoImage[0].width*(i-1), 50, 50*Math.abs(i-1));
-    movieScreen[i].rotation.set(0, (Math.PI /8)*(1-i), 0);
+    movieScreen[i].position.set(0, 0, -100);
+    movieScreen[i].rotation.set(0, 0, 0); // (Math.PI /8)*(1-i)
     scene.add(movieScreen[i]);
   }
   camera.position.set(0,50,400);
@@ -109,20 +106,7 @@ function init()
   console.log("Three.JS GL context and video feeds initialized.");
 
   statprofiler.add("Render time");
-  statprofiler.add("FAST features");
   console.log("Profiler initialized.");
-
-  // threshold on difference between intensity of the central pixel
-  // and pixels of a circle around this pixel
-  var threshold = 20;
-  jsfeat.fast_corners.set_threshold(threshold);
-
-  // you should use preallocated point2d_t array
-  var i = 320*240;
-  while(--i >= 0)
-    corners[i] = new jsfeat.point2d_t(0,0,0,0);
-  img_u8 = new jsfeat.matrix_t(320, 240, jsfeat.U8_t | jsfeat.C1_t);
-  console.log("JSFeat initialized.");
 }
 
 function animate() {
@@ -134,36 +118,15 @@ function animate() {
 function render()  {
   statprofiler.new_frame();
 
-  var CalculateFastFeatures = true;
-  var DisplayFastFeatures = true;
-
-  statprofiler.start("FAST features");
+  statprofiler.start("Render time");
   for (var i=0; i < NUM_CAMERAS; i++) {
     if (video[i].readyState === video[i].HAVE_ENOUGH_DATA) {
       videoImageContext[i].drawImage( video[i],
           0, 0, videoImage[i].width, videoImage[i].height);
       if (videoTexture[i])
-        videoTexture[i].needsUpdate = true;
-
-      // Calculate the FAST features if they're enabled.
-      if (CalculateFastFeatures) {
-        var imageData = videoImageContext[i].getImageData(0, 0, 320, 240);
-
-        jsfeat.imgproc.grayscale(imageData.data, img_u8.data);
-        var count = jsfeat.fast_corners.detect(img_u8, corners, 5);
-      }
-      // Display the FAST features if calculated and display is enabled.
-      if (CalculateFastFeatures && DisplayFastFeatures) {
-        var data_u32 = new Uint32Array(imageData.data.buffer);
-        render_corners(corners, count, data_u32, 320);
-        videoImageContext[i].putImageData(imageData, 0, 0);
-      }
+        videoTexture[i].needsUpdate = true;  renderer.render(scene, camera);
     }
   }
-  statprofiler.stop("FAST features");
-
-  statprofiler.start("Render time");
-  renderer.render(scene, camera);
   statprofiler.stop("Render time");
 
   document.getElementById('log').innerHTML  = (statprofiler.log());
@@ -173,18 +136,44 @@ function update() {
   // Empty for the moment.
 }
 
+function updateWebGLWithHomography(H) {
+  // Now we need to calculate the movieScreen[1].position with the projection
+  // of the four corners. Then reset the associated rotation.
+  movieScreen[0].geometry = new THREE.PlaneGeometry(videoImage[0].width, videoImage[0].height);
 
-function render_corners(corners, count, img, step) {
-   var pix = (0xff << 24) | (0x00 << 16) | (0xff << 8) | 0x00;
-   for(var i=0; i < count; ++i)
-   {
-       var x = corners[i].x;
-       var y = corners[i].y;
-       var off = (x + y * step);
-       img[off] = pix;
-       img[off-1] = pix;
-       img[off+1] = pix;
-       img[off-step] = pix;
-       img[off+step] = pix;
-   }
+  alpha = Math.max(Math.max(H[0][0], H[0][1]), Math.max(H[1][0], H[1][1]));
+  //if (alpha>1.0) {
+  //  H[0][0] = H[0][0] / alpha;
+  //  H[0][1] = H[0][1] / alpha;
+  //  H[1][0] = H[1][0] / alpha;
+  //  H[1][1] = H[1][1] / alpha;
+  //}
+
+  movieScreen[0].geometry.vertices[0].x = applyPerspectiveToPoint_x(-160, 120,H);
+  movieScreen[0].geometry.vertices[0].y = applyPerspectiveToPoint_y(-160, 120,H);
+  movieScreen[0].geometry.vertices[1].x = applyPerspectiveToPoint_x( 160, 120,H);
+  movieScreen[0].geometry.vertices[1].y = applyPerspectiveToPoint_y( 160, 120,H);
+  movieScreen[0].geometry.vertices[2].x = applyPerspectiveToPoint_x(-160,-120,H);
+  movieScreen[0].geometry.vertices[2].y = applyPerspectiveToPoint_y(-160,-120,H);
+  movieScreen[0].geometry.vertices[3].x = applyPerspectiveToPoint_x( 160,-120,H);
+  movieScreen[0].geometry.vertices[3].y = applyPerspectiveToPoint_y( 160,-120,H);
+  movieScreen[0].geometry.verticesNeedUpdate = true;
+
+  //H4 = new THREE.Matrix4(H[0][0], H[0][1], 0.0, H[0][2],
+  //                       H[1][0], H[1][1], 0.0, H[1][2],
+  //                           0.0,     0.0, 1.0,     0.0,
+  //                       H[2][0], H[2][1], 0.0, H[2][2]);
+  //movieScreen[0].geometry.applyMatrix(H4);
+  //movieScreen[0].geometry.verticesNeedUpdate = true;
+
+}
+
+// Applying a perspective to a point (x,y) means:
+// x' = (H11 x + H12 y + H13) / (H31 x + H32 y + H33)
+// y' = (H21 x + H22 y + H23) / (H31 x + H32 y + H33)   (matrix index notation)
+function applyPerspectiveToPoint_x(x, y, H) {
+  return (H[0][0]*x + H[0][1]*y + H[0][2])/(H[2][0]*x + H[2][1]*y + H[2][2]);
+}
+function applyPerspectiveToPoint_y(x, y, H) {
+  return (H[1][0]*x + H[1][1]*y + H[1][2])/(H[2][0]*x + H[2][1]*y + H[2][2]);
 }

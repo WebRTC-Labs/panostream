@@ -22,13 +22,18 @@
     textures. Internally it uses:
     * The profiler nanolibrary from http://inspirit.github.io/jsfeat for FPS
     collection etc.
-    * The JSFeat library to extract features from the frames.
     * Obviously the three.JS library.
   -->
   <script src="libs/profiler.js" type="text/javascript" ></script>
-  <script src="libs/jsfeat.js" type="text/javascript" ></script>
   <script src="libs/three.js" type="text/javascript" ></script>
   <script src="webgl.js" type="text/javascript"></script>
+
+  <!-- This is the NaCl/PNaCl part -->
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="-1">
+  <title>NaClMiguelao</title>
+  <script type="text/javascript" src="common.js"></script>
+  <script type="text/javascript" src="stitching.js"></script>
 
   <script src="panostream.js"></script>
   <script type="text/javascript">
@@ -39,9 +44,26 @@
   </script>
 
 </head>
-<body>
+<body data-name="nacl_glue"
+      data-tools="glibc pnacl linux"
+      data-configs="Release"
+      data-path="{tc}/..">
 
 <div id="wrapper">
+    <!--
+  Just as in part1, the <embed> element will be wrapped inside the <div>
+  element with the id "listener". In part1, the embed was specified in HTML,
+  here the common.js module creates a new <embed> element and adds it to the
+  <div> for us.
+  -->
+  <div id="listener"></div>
+
+  <!--
+  This element will be populated with the messages that come from the NaCl
+  module. See example.js.
+  -->
+  <div id="log" style="display:none"></div>
+
   <div>
     Current webcam: <select id="videosrc"></select>
     <button id="request-video" onclick="requestVideo();">Request video</button>
@@ -51,32 +73,32 @@
   <div>Panorama:</div>
   <div id="container">
     <div id="left">
-      <video width="320" height="240" id="view1" autoplay="autoplay"
+      <video width="320" height="240" id="vid1" autoplay="autoplay"
           class="video-area"></video>
-      <div id="view1-label"></div>
+      <div id="vid1-label"></div>
       <div>
-        Size: <div id="view1-size" class="inline-contents"></div>
-        <div id="view1-stream-size" class="inline-contents">(stream size
+        Size: <div id="vid1-size" class="inline-contents"></div>
+        <div id="vid1-stream-size" class="inline-contents">(stream size
             :N/A)</div><br/>
       </div>
     </div>
     <div id="left">
-      <video width="320" height="240" id="view2" autoplay="autoplay"
+      <video width="320" height="240" id="vid2" autoplay="autoplay"
           class="video-area"></video>
-      <div id="view2-label"></div>
+      <div id="vid2-label"></div>
       <div>
-        Size: <div id="view2-size" class="inline-contents"></div>
-        <div id="view2-stream-size" class="inline-contents">(stream size
+        Size: <div id="vid2-size" class="inline-contents"></div>
+        <div id="vid2-stream-size" class="inline-contents">(stream size
             :N/A)</div><br/>
       </div>
     </div>
     <div id="left">
-      <video width="320" height="240" id="view3" autoplay="autoplay"
-          class="video-area"></video>
-      <div id="view3-label"></div>
+      <video width="320" height="240" id="vid33" autoplay="autoplay"
+          class="video-area" style="display:none"></video>
+      <div id="vid3-label"></div>
       <div>
-        Size: <div id="view3-size" class="inline-contents"></div>
-        <div id="view3-stream-size" class="inline-contents">(stream size
+        Size: <div id="vid3-size" class="inline-contents"></div>
+        <div id="vid3-stream-size" class="inline-contents">(stream size
             :N/A)</div><br/>
       </div>
     </div>
@@ -87,11 +109,14 @@
   <canvas id="canvas3" width="320" height="240" style="display:none"></canvas>
   <div id="glcanvas" width="960" height="240" ></div>
 
-  <div id="log">hi</div>
+  <br>
+  <button id="btn_calibrate" onclick="calibrate()" disabled="true">
+    Calibrate, you evil monster!
+  </button>
 
   <canvas id="tmpcanvas1" width="320" height="240" style="display:none"></canvas>
   <canvas id="tmpcanvas2" width="320" height="240" style="display:none"></canvas>
-  <p id="overlap" onclick="updateOverlap()">update overlap</p>
+
 </div>
 </body>
 </html>
