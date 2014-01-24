@@ -3,7 +3,7 @@ Panostream - Video stream panorama
 
 This web page shows how to open two different camera feeds, represent them, and estimate the homography (the mathematical transformation that relates one and the other) via OpenCV in a PNaCl plugin, to produce a 3d rendering of both feeds "stitched" or in the form of a "panorama". The calibration is produced on-demand by clicking on the button at the bottom after requesting the videos and seeing them playing.
 
-This demo would work only in Chrome, and PNaCl needs to be enabled via [Chrome flags](about:flags) -- just search for NaCl in that page.
+This demo would work only in Chrome, and PNaCl needs to be enabled via Chrome flags (type about:flags in the browser bar) -- just search for NaCl in that page.
 
 An stitched 2 camera feed would roughly look like the image:
 
