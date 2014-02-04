@@ -9,7 +9,7 @@
 var NUM_CAMERAS = 2;
 
 // ThreeJS global variables.
-var container, scene, camera, renderer;
+var container, scene, camera, renderer, controls;
 
 // Global variables to manipulate Videos/canvases.
 var video = [];
@@ -40,7 +40,7 @@ function init()
   var VIEW_ANGLE = 45;
   var ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
   var NEAR = 0.1;
-  var FAR = 1000;
+  var FAR = 10000;
 
   // Scene camera.
   camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
@@ -55,6 +55,16 @@ function init()
   container.appendChild( renderer.domElement );
   console.log("Three.JS renderer initialized");
 
+  controls = new THREE.TrackballControls(camera, container);
+  controls.rotateSpeed = 1.0;
+  controls.zoomSpeed = 1.2;
+  controls.panSpeed = 0.8;
+  controls.noZoom = false;
+  controls.noPan = false;
+  controls.staticMoving = true;
+  controls.dynamicDampingFactor = 0.3;
+  controls.keys = [ 65, 83, 68 ];
+
   // Light source.
   var light = new THREE.PointLight(0xffffff);
   light.position.set(0,250,0);
@@ -62,15 +72,15 @@ function init()
   console.log("Three.JS light source initialized");
 
   // Floor -> Disconnected but is useful when the camera is looking AWOL.
-  //var floorTexture = new THREE.ImageUtils.loadTexture( 'images/checkerboard.jpg' );
-  //floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
-  //floorTexture.repeat.set( 10, 10 );
-  //var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
-  //var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
-  //var floor = new THREE.Mesh(floorGeometry, floorMaterial);
-  //floor.position.y = -0.5;
-  //floor.rotation.x = Math.PI / 2;
-  //scene.add(floor);
+  var floorTexture = new THREE.ImageUtils.loadTexture( 'images/checkerboard.jpg' );
+  floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping;
+  floorTexture.repeat.set( 10, 10 );
+  var floorMaterial = new THREE.MeshBasicMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+  var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 10, 10);
+  var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.position.y = -0.5;
+  floor.rotation.x = Math.PI / 2;
+  scene.add(floor);
 
   // Camera video input. The idea is to plug a camera <video> feed into a canvas
   // and use it to retrieve the data.
@@ -117,6 +127,7 @@ function animate() {
 
 function render()  {
   statprofiler.new_frame();
+  controls.update();
 
   statprofiler.start("Render time");
   for (var i=0; i < NUM_CAMERAS; i++) {
