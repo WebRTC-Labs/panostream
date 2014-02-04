@@ -16,7 +16,7 @@ class NaClGlueInstance : public pp::Instance, public MessageDispatcher {
 
     std::string banner("Initialised OpenCV version: ");
     banner += stitching_.GetOpenCVVersion();
-    bool res = stitching_.InitialiseOpenCV(320, 240);
+    bool res = stitching_.InitialiseOpenCV(640, 480);
     banner += (res ? " - OK" : (" - " + stitching_.last_error()));
     SendMessage(banner);
 

@@ -45,7 +45,7 @@ function init()
   // Scene camera.
   camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
   scene.add(camera);
-  camera.position.set(0,150,400);
+  camera.position.set(0,150,800);
   camera.lookAt(scene.position);
   console.log("Three.JS camera initialized");
 
@@ -98,7 +98,7 @@ function init()
     movieScreen[i].rotation.set(0, 0, 0); // (Math.PI /8)*(1-i)
     scene.add(movieScreen[i]);
   }
-  camera.position.set(0,50,400);
+  camera.position.set(0,50,800);
   if (NUM_CAMERAS >1)
     camera.lookAt(movieScreen[1].position);
   else
@@ -149,14 +149,19 @@ function updateWebGLWithHomography(H) {
   //  H[1][1] = H[1][1] / alpha;
   //}
 
-  movieScreen[0].geometry.vertices[0].x = applyPerspectiveToPoint_x(-160, 120,H);
-  movieScreen[0].geometry.vertices[0].y = applyPerspectiveToPoint_y(-160, 120,H);
-  movieScreen[0].geometry.vertices[1].x = applyPerspectiveToPoint_x( 160, 120,H);
-  movieScreen[0].geometry.vertices[1].y = applyPerspectiveToPoint_y( 160, 120,H);
-  movieScreen[0].geometry.vertices[2].x = applyPerspectiveToPoint_x(-160,-120,H);
-  movieScreen[0].geometry.vertices[2].y = applyPerspectiveToPoint_y(-160,-120,H);
-  movieScreen[0].geometry.vertices[3].x = applyPerspectiveToPoint_x( 160,-120,H);
-  movieScreen[0].geometry.vertices[3].y = applyPerspectiveToPoint_y( 160,-120,H);
+  var x1 = videoImage[0].width/2;
+  var x0 = -1*x1;
+  var y1 = videoImage[0].height/2;
+  var y0 = -1*y1;
+
+  movieScreen[0].geometry.vertices[0].x = applyPerspectiveToPoint_x(x0,y1,H);
+  movieScreen[0].geometry.vertices[0].y = applyPerspectiveToPoint_y(x0,y1,H);
+  movieScreen[0].geometry.vertices[1].x = applyPerspectiveToPoint_x(x1,y1,H);
+  movieScreen[0].geometry.vertices[1].y = applyPerspectiveToPoint_y(x1,y1,H);
+  movieScreen[0].geometry.vertices[2].x = applyPerspectiveToPoint_x(x0,y0,H);
+  movieScreen[0].geometry.vertices[2].y = applyPerspectiveToPoint_y(x0,y0,H);
+  movieScreen[0].geometry.vertices[3].x = applyPerspectiveToPoint_x(x1,y0,H);
+  movieScreen[0].geometry.vertices[3].y = applyPerspectiveToPoint_y(x1,y0,H);
   movieScreen[0].geometry.verticesNeedUpdate = true;
 
   //H4 = new THREE.Matrix4(H[0][0], H[0][1], 0.0, H[0][2],

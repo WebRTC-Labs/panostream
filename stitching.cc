@@ -9,6 +9,7 @@
 
 #include "ppapi/cpp/var.h"
 #include "ppapi/cpp/var_array.h"
+#include "ppapi/cpp/var_array_buffer.h"
 #include "ppapi/cpp/var_dictionary.h"
 
 namespace {
@@ -72,6 +73,19 @@ bool Stitching::CalculateHomography() {
 
   double t_0 = (double)cv::getTickCount();
   msg_handler_->SendMessage("Starting homography calculation");
+
+  pp::VarDictionary message_dic;
+  message_dic.Set("message", "img0");
+  int the_size = input_img_[0]->size().area();
+  pp::VarArrayBuffer v2(the_size);
+  unsigned char* pDst = static_cast<unsigned char*>(v2.Map());
+  for(int i=0; i<the_size; ++i)
+    pDst[i] = input_img_[0]->data[i];
+  v2.Unmap();
+
+  message_dic.Set("value", v2);
+  msg_handler_->SendMessage(message_dic);
+
 
   // Extract keypoints from image. This is expensive compared to the other ops.
   detector_->detect(*input_img_[0], keypoints_[0]);

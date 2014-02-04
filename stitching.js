@@ -36,6 +36,10 @@ function handleMessage(message) {
       updateWebGLWithHomography(homography);
       homography[0].length = homography[1].length = homography[2].length = 0;
     }
+  } else if (message.data['message'] == "img0") {
+    console.log("Got image " + message.data['value']);
+    var ab = new ArrayBuffer(message.data['value']);
+
   } else {
     // Dump stuff to special PNaCl output area.
     var logEl = document.getElementById('log');
@@ -66,16 +70,18 @@ function calibrate() {
 
   for(var i=0; i<2; i++) {
     if (video[i].readyState === video[i].HAVE_ENOUGH_DATA) {
-      videoImageContext[i].drawImage(video[i], 0, 0, 320, 240);
-      imageData[i] = videoImageContext[i].getImageData(0, 0, 320, 240);
+      videoImageContext[i].drawImage(
+          video[i], 0, 0, videoImage[0].width, videoImage[0].height);
+      imageData[i] = videoImageContext[i].getImageData(
+          0, 0, videoImage[0].width, videoImage[0].height);
 
       // After the NaCl module has loaded, common.naclModule is a reference to
       // the NaCl module's <embed> element. Method postMessage sends a message
       // to it. F.i.:
       common.naclModule.postMessage({'message' : 'data',
                                      'index' : i,
-                                     'width' : 320,
-                                     'height' : 240,
+                                     'width' : videoImage[0].width,
+                                     'height' : videoImage[0].height,
                                      'data' : imageData[i].data.buffer});
     }
   }

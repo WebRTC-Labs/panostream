@@ -20,8 +20,8 @@ function requestVideo(opt_video_id) {
       audio: false,
       video: {
           mandatory: {
-              maxWidth: 320,
-              maxHeight: 240,
+              maxWidth: 640,
+              maxHeight: 480,
           },
           optional: [
              {sourceId: videoId},
