@@ -15,7 +15,6 @@ function moduleDidLoad() {
   document.getElementById('btn_calibrate').disabled = false;
 }
 
-var byteArray = [];
 // This function is called by common.js when a message is received from the
 // NaCl module.
 function handleMessage(message) {
