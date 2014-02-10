@@ -15,6 +15,7 @@ function moduleDidLoad() {
   document.getElementById('btn_calibrate').disabled = false;
 }
 
+var byteArray = [];
 // This function is called by common.js when a message is received from the
 // NaCl module.
 function handleMessage(message) {
@@ -36,9 +37,26 @@ function handleMessage(message) {
       updateWebGLWithHomography(homography);
       homography[0].length = homography[1].length = homography[2].length = 0;
     }
-  } else if (message.data['message'] == "img0") {
-    console.log("Got image " + message.data['value']);
-    var ab = new ArrayBuffer(message.data['value']);
+  } else if (message.data['message'] == "I") {
+    var int8View = new Int8Array(message.data['value']);
+    console.log(" Got image " + message.data['value'] + " - " +
+        int8View.byteLength + "B");
+
+    if (0) {
+      var cnv1 = document.getElementById('canvas3');
+      var ctx1 = cnv1.getContext('2d');
+      var imageData1 = ctx1.getImageData(0, 0, 320, 240);
+      var data1 = imageData1.data;
+      var p = 0;
+      for (var i = 0; i < data1.length; i += 4) {
+        data1[i]     = int8View[p++];
+        data1[i + 1] = int8View[p++];//int8View[i + 1];
+        data1[i + 2] = int8View[p++];//int8View[i + 2];
+        data1[i + 3] = 255;//int8View[p++];//int8View[i + 3];
+        p++;
+      }
+      ctx1.putImageData(imageData1, 0, 0);
+    }
 
   } else {
     // Dump stuff to special PNaCl output area.
@@ -85,6 +103,5 @@ function calibrate() {
                                      'data' : imageData[i].data.buffer});
     }
   }
-
   common.naclModule.postMessage('Please calculate the homography.');
 }

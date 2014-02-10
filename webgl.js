@@ -55,15 +55,15 @@ function init()
   container.appendChild( renderer.domElement );
   console.log("Three.JS renderer initialized");
 
-  controls = new THREE.TrackballControls(camera, container);
-  controls.rotateSpeed = 1.0;
-  controls.zoomSpeed = 1.2;
-  controls.panSpeed = 0.8;
-  controls.noZoom = false;
-  controls.noPan = false;
-  controls.staticMoving = true;
-  controls.dynamicDampingFactor = 0.3;
-  controls.keys = [ 65, 83, 68 ];
+  //controls = new THREE.TrackballControls(camera, container);
+  //controls.rotateSpeed = 1.0;
+  //controls.zoomSpeed = 1.2;
+  //controls.panSpeed = 0.8;
+  //controls.noZoom = false;
+  //controls.noPan = false;
+  //controls.staticMoving = true;
+  //controls.dynamicDampingFactor = 0.3;
+  //controls.keys = [ 65, 83, 68 ];
 
   // Light source.
   var light = new THREE.PointLight(0xffffff);
@@ -127,7 +127,7 @@ function animate() {
 
 function render()  {
   statprofiler.new_frame();
-  controls.update();
+  //controls.update();
 
   statprofiler.start("Render time");
   for (var i=0; i < NUM_CAMERAS; i++) {

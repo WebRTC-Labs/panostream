@@ -16,7 +16,7 @@ class NaClGlueInstance : public pp::Instance, public MessageDispatcher {
 
     std::string banner("Initialised OpenCV version: ");
     banner += stitching_.GetOpenCVVersion();
-    bool res = stitching_.InitialiseOpenCV(640, 480);
+    bool res = stitching_.InitialiseOpenCV(320, 240);
     banner += (res ? " - OK" : (" - " + stitching_.last_error()));
     SendMessage(banner);
 
@@ -40,7 +40,8 @@ class NaClGlueInstance : public pp::Instance, public MessageDispatcher {
         int index = dictionary.Get("index").AsInt();
         pp::VarArrayBuffer array_buffer(dictionary.Get("data"));
         if (index >=0 && index < 2 && width > 0 && height > 0) {
-          uint32_t* pixels = static_cast<uint32_t*>(array_buffer.Map());
+          unsigned char* pixels =
+              static_cast<unsigned char*>(array_buffer.Map());
           stitching_.SetImageData(index, height, width, pixels);
           array_buffer.Unmap();
         }

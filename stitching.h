@@ -44,7 +44,7 @@ class Stitching{
     msg_handler_ = handler;
   }
   const void SetImageData(
-      int idx, int height, int width, const uint32_t* array) ;
+      int idx, int height, int width, const unsigned char* array) ;
 
  private:
   // Only 2 images supported ATM, checked in InitialiseOpenCV()
