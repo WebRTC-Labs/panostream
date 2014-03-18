@@ -36,6 +36,27 @@ function handleMessage(message) {
       updateWebGLWithHomography(homography);
       homography[0].length = homography[1].length = homography[2].length = 0;
     }
+  } else if (message.data['message'] == "I") {
+    var int8View = new Int8Array(message.data['value']);
+    console.log(" Got image " + message.data['value'] + " - " +
+        int8View.byteLength + "B");
+
+    if (0) {
+      var cnv1 = document.getElementById('canvas3');
+      var ctx1 = cnv1.getContext('2d');
+      var imageData1 = ctx1.getImageData(0, 0, 320, 240);
+      var data1 = imageData1.data;
+      var p = 0;
+      for (var i = 0; i < data1.length; i += 4) {
+        data1[i]     = int8View[p++];
+        data1[i + 1] = int8View[p++];//int8View[i + 1];
+        data1[i + 2] = int8View[p++];//int8View[i + 2];
+        data1[i + 3] = 255;//int8View[p++];//int8View[i + 3];
+        p++;
+      }
+      ctx1.putImageData(imageData1, 0, 0);
+    }
+
   } else {
     // Dump stuff to special PNaCl output area.
     var logEl = document.getElementById('log');
@@ -66,19 +87,20 @@ function calibrate() {
 
   for(var i=0; i<2; i++) {
     if (video[i].readyState === video[i].HAVE_ENOUGH_DATA) {
-      videoImageContext[i].drawImage(video[i], 0, 0, 320, 240);
-      imageData[i] = videoImageContext[i].getImageData(0, 0, 320, 240);
+      videoImageContext[i].drawImage(
+          video[i], 0, 0, videoImage[0].width, videoImage[0].height);
+      imageData[i] = videoImageContext[i].getImageData(
+          0, 0, videoImage[0].width, videoImage[0].height);
 
       // After the NaCl module has loaded, common.naclModule is a reference to
       // the NaCl module's <embed> element. Method postMessage sends a message
       // to it. F.i.:
       common.naclModule.postMessage({'message' : 'data',
                                      'index' : i,
-                                     'width' : 320,
-                                     'height' : 240,
+                                     'width' : videoImage[0].width,
+                                     'height' : videoImage[0].height,
                                      'data' : imageData[i].data.buffer});
     }
   }
-
   common.naclModule.postMessage('Please calculate the homography.');
 }

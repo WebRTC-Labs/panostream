@@ -40,7 +40,8 @@ class NaClGlueInstance : public pp::Instance, public MessageDispatcher {
         int index = dictionary.Get("index").AsInt();
         pp::VarArrayBuffer array_buffer(dictionary.Get("data"));
         if (index >=0 && index < 2 && width > 0 && height > 0) {
-          uint32_t* pixels = static_cast<uint32_t*>(array_buffer.Map());
+          unsigned char* pixels =
+              static_cast<unsigned char*>(array_buffer.Map());
           stitching_.SetImageData(index, height, width, pixels);
           array_buffer.Unmap();
         }

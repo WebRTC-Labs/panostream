@@ -9,6 +9,7 @@
 
 #include "ppapi/cpp/var.h"
 #include "ppapi/cpp/var_array.h"
+#include "ppapi/cpp/var_array_buffer.h"
 #include "ppapi/cpp/var_dictionary.h"
 
 namespace {
@@ -73,6 +74,20 @@ bool Stitching::CalculateHomography() {
   double t_0 = (double)cv::getTickCount();
   msg_handler_->SendMessage("Starting homography calculation");
 
+  pp::VarDictionary message_dic;
+  message_dic.Set("message", "I");
+  int the_size = input_img_rgba_[0]->size().area() * 4;
+  msg_handler_->SendMessage(" sending data, bytes: " +  print(the_size));
+  pp::VarArrayBuffer v2(the_size);
+  unsigned char* pDst = static_cast<unsigned char*>(v2.Map());
+  for (int i = 0; i < the_size; ++i) {
+    pDst[i] = input_img_rgba_[0]->data[i];
+  }
+  v2.Unmap();
+  message_dic.Set("value", v2);
+  msg_handler_->SendMessage(message_dic);
+
+
   // Extract keypoints from image. This is expensive compared to the other ops.
   detector_->detect(*input_img_[0], keypoints_[0]);
   msg_handler_->SendMessage("Detected keypoints image 0: " +
@@ -134,9 +149,6 @@ bool Stitching::CalculateHomography() {
       msg_handler_->SendMessage("Homography calculated in: " +
           print(t*1000) + "us");
     }
-    //msg_handler_->SendMessage("H=[[" + print(homography_.at<double>(0,0)) +" "+ print(homography_.at<double>(0,1)) +" "+ print(homography_.at<double>(0,2)) + ']');
-    //msg_handler_->SendMessage("   [" + print(homography_.at<double>(1,0)) +" "+ print(homography_.at<double>(1,1)) +" "+ print(homography_.at<double>(1,2)) + ']');
-    //msg_handler_->SendMessage("   [" + print(homography_.at<double>(2,0)) +" "+ print(homography_.at<double>(2,1)) +" "+ print(homography_.at<double>(2,2)) + "]]");
 
     for (int row = 0; row < 3; ++row)
       for ( int column=0; column < 3; ++column)
@@ -161,8 +173,18 @@ void Stitching::PostHomographyValue(
 }
 
 const void Stitching::SetImageData(
-    int idx, int height, int width, const uint32_t* array) {
-  memcpy(input_img_rgba_[idx]->ptr(), array, height * width * 4);
-  cv::cvtColor(*input_img_rgba_[idx], *input_img_rgb_[idx], CV_RGBA2RGB);
-  cv::cvtColor(*input_img_rgb_[idx], *input_img_[idx], CV_RGB2GRAY);
+    int idx, int height, int width, const unsigned char* array) {
+  // |array| comes as RGBA in char[] index. I suspect OpenCV is using signed
+  // char's despite being configured as 8UC1. So we cannot just do this:
+  //if (input_img_rgba_[idx]->isContinuous())
+  //  memcpy(input_img_rgba_[idx]->data, array, height * width * 4);
+
+  for (int i = 0; i < height * width * 4; i += 4) {
+    input_img_rgba_[idx]->data[i]     = array[i]/2;
+    input_img_rgba_[idx]->data[i + 1] = array[i + 1]/2;
+    input_img_rgba_[idx]->data[i + 2] = array[i + 2]/2;
+    input_img_rgba_[idx]->data[i + 3] = 255;
+  }
+  cv::cvtColor(*input_img_rgba_[idx], *input_img_rgb_[idx], CV_BGRA2BGR);
+  cv::cvtColor(*input_img_rgb_[idx], *input_img_[idx], CV_BGR2GRAY);
 }

@@ -26,6 +26,7 @@
   -->
   <script src="libs/profiler.js" type="text/javascript" ></script>
   <script src="libs/three.js" type="text/javascript" ></script>
+  <script src="libs/TrackballControls.js" type="text/javascript" ></script>
   <script src="webgl.js" type="text/javascript"></script>
 
   <!-- This is the NaCl/PNaCl part -->
@@ -69,6 +70,8 @@
     <button id="request-video" onclick="requestVideo();">Request video</button>
     <button id="reset-video" onclick="resetAllVideo();">Reset all devices
         </button>
+    <button id="btn_calibrate" onclick="calibrate()" disabled="true">
+    (Please) calibrate.</button>
   </div>
   <div>Panorama:</div>
   <div id="container">
@@ -92,30 +95,16 @@
             :N/A)</div><br/>
       </div>
     </div>
-    <div id="left">
-      <video width="320" height="240" id="vid33" autoplay="autoplay"
-          class="video-area" style="display:none"></video>
-      <div id="vid3-label"></div>
-      <div>
-        Size: <div id="vid3-size" class="inline-contents"></div>
-        <div id="vid3-stream-size" class="inline-contents">(stream size
-            :N/A)</div><br/>
-      </div>
-    </div>
+
   </div>
 
   <canvas id="canvas1" width="320" height="240" style="display:none"></canvas>
   <canvas id="canvas2" width="320" height="240" style="display:none"></canvas>
-  <canvas id="canvas3" width="320" height="240" style="display:none"></canvas>
-  <div id="glcanvas" width="960" height="240" ></div>
+  <!--<canvas id="canvas3" width="320" height="240"></canvas>-->
+
+  <div id="glcanvas" width="960" height="240"></div>
 
   <br>
-  <button id="btn_calibrate" onclick="calibrate()" disabled="true">
-    Calibrate, you evil monster!
-  </button>
-
-  <canvas id="tmpcanvas1" width="320" height="240" style="display:none"></canvas>
-  <canvas id="tmpcanvas2" width="320" height="240" style="display:none"></canvas>
 
 </div>
 </body>

@@ -68,4 +68,5 @@ HTTPD_PY := python ./tools/httpd.py
 
 .PHONY: serve
 serve: all
-	$(HTTPD_PY) -C $(CURDIR)
+	python -m SimpleHTTPServer
+	#$(HTTPD_PY) -C $(CURDIR)
